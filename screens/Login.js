@@ -22,7 +22,6 @@ const Login = ({navigation}) => {
     }
     setLoading(true);
     let dataToSend = {username: username, password: userPassword};
-    console.log(API_URL.api)
     fetch(`${API_URL.api}/api/users/login`, {
       method: 'POST',
       body: JSON.stringify(dataToSend),
@@ -68,7 +67,7 @@ const Login = ({navigation}) => {
               passwordInputRef.current &&
               passwordInputRef.current.focus()
             }
-            onChangeText={text => setUsername(text)}/>
+            onChangeText={(text) => {setUsername(text);}}/>
         </View>
         <View style={styles.inputView} >
           <TextInput  

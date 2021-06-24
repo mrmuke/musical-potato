@@ -17,6 +17,7 @@ import SplashScreen from './screens/Splash';
 import LoginScreen from './screens/Login';
 import RegisterScreen from './screens/Register';
 import Tabs from './screens/Tabs';
+import WantePage from './screens/Wante'
 
 const Stack = createStackNavigator();
 
@@ -69,6 +70,12 @@ const App = () => {
         <Stack.Screen
           name="Tabs"
           component={Tabs}
+          // Hiding header for Navigation Drawer
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Wante"
+          component={WantePage}
           // Hiding header for Navigation Drawer
           options={{headerShown: false}}
         />
