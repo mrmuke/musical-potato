@@ -17,6 +17,7 @@ import SplashScreen from './screens/Splash';
 import LoginScreen from './screens/Login';
 import RegisterScreen from './screens/Register';
 import Tabs from './screens/Tabs';
+import { default as theme } from './custom-theme.json'; // <-- Import app theme
 
 const Stack = createStackNavigator();
 
@@ -49,7 +50,7 @@ const Auth = () => {
 
 const App = () => {
   return ( <><IconRegistry icons={EvaIconsPack} />
-    <ApplicationProvider {...eva} theme={eva.light}>
+    <ApplicationProvider {...eva} theme={{ ...eva.light, ...theme }}>
     <NavigationContainer>
       <Stack.Navigator initialRouteName="SplashScreen">
         {/* SplashScreen which will come once for 5 Seconds */}
