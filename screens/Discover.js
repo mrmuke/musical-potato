@@ -20,7 +20,9 @@ const Discover = ({ route }) => {
   const mapRef = useRef(null);
   const [activeBounties, setActiveBounties] = useState([])
   const [showActiveBounties, setShowActiveBounties] = useState(false)
-  const [showSuggestedRoute, setShowSuggestedRoute] = useState(false)  /*   compute suggested route 
+  const [showSuggestedRoute, setShowSuggestedRoute] = useState(false)  
+  /*   
+      compute suggested route 
     update my location button or live tracking
       check in system and progress
       make sure to show both route and both points calculation calculate longitude delta
@@ -32,20 +34,11 @@ const Discover = ({ route }) => {
       see direct impact of donations
       different colors and custom map directions view
 
-
-      random reminders
-
-
       blockchain project
-      spade features and markeitng hw
-      maybe finish greenboutny
-      workout
       hackathons and hackerrank and kaggle
 
-      
       //cannot update during existing state
-
-     */
+  */
   useEffect(() => {
     getBounties()
 
@@ -219,8 +212,6 @@ const Discover = ({ route }) => {
             'center', padding: 20
         }}><Button status="control" onPress={() => setErrorMsg(null)} style={{ alignSelf: 'flex-start' }} accessoryLeft={props => <Icon {...props} name="chevron-left-outline" />}>Back</Button><Image source={require('../images/location.png')} style={{ width: 125, height: 125 }} resizeMode='contain' /><Text style={{ fontSize: 30 }}>OOPS!</Text><Text style={{ fontSize: 15 }}>Please turn on location services!</Text></View>
       }
-
-
       {curLoc && position && <BountyInfo setActiveBounties={setActiveBounties} position={position} activeBounties={activeBounties} createActiveBounty={createActiveBounty} activeBounties={activeBounties} setActiveBounties={setActiveBounties} position={position} bounty={curLoc} setBounty={setCurLoc} changeRegion={changeRegion} curIndex={curIndex} markers={markers} />
       }
     </View>
