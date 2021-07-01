@@ -1,8 +1,9 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Image, Keyboard, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, ButtonGroup, Datepicker, Icon, Input, Text, Toggle } from '@ui-kitten/components';
+import { Image, Keyboard, ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { Button, ButtonGroup, Datepicker, Icon, Input, Text, Toggle, Divider, Radio, Modal } from '@ui-kitten/components';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import API_URL from '../api/API_URL';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
@@ -66,16 +67,20 @@ const BountyPage = () => {
       setCreated(response.id)
     })
 
+
   }
   if(created){
-    return (<View style={{flex:1,alignItems:'center',justifyContent:'center',backgroundColor:"white"}}>
-<Icon
-    style={{width:100,height:100}}
-    fill='green'
-    name='checkmark-circle-outline'
-  /><Text style={{marginVertical:20,fontSize:20}}>Bounty Created!</Text><Button onPress={()=>navigation.jumpTo('Discover', { id:created  })
-}>Check it Out</Button></View>)
+    return (
+    <View style={{flex:1,alignItems:'center',justifyContent:'center',backgroundColor:"white"}}>
+      <Icon
+          style={{width:100,height:100}}
+          fill='green'
+          name='checkmark-circle-outline'
+        /><Text style={{marginVertical:20,fontSize:20}}>Bounty Created!</Text><Button onPress={()=>navigation.jumpTo('Discover', { id:created  })
+      }>Check it Out</Button>
+    </View>)
   }
+
   return (<>
     <ScrollView
       contentContainerStyle={{
@@ -270,38 +275,47 @@ const WantePage = ({route}) => {
     }}>
     {/* amount description title location type user whether group direcitons in steps? optional image */}
     <View style={{flexDirection:'row',alignItems:'center', paddingTop:120, marginBottom: 10}}>
-      
-    <View style={{flex:1}}>
-      <Image style={{width:"90%",height:undefined,aspectRatio:1}} resizeMode="contain" source={image}/>
-    </View>
-    <View style={{flex:1,marginRight:10}}>
-      <Input
-        style={styles.input}
-        textStyle={styles.inputText}
-        size='large'
-      placeholder='Enter Wante title..'
-      value={title}
-      /* caption="Get people interested in the bounty" */
-      label='Wante Title'
-      onChangeText={nextValue => setTitle(nextValue)}
-    />
-    <Input
-      placeholder='Enter bounty amount..'
-      style={styles.input}
-      size={'large'}
-      value={amount}
-      /* caption="How much are you willing to give up?" */
-      label='Wante Amount'
-      accessoryRight={(props)=><Icon name="gift-outline" {...props}/>}
-      onChangeText={nextValue => setAmount(nextValue.replace(/[^0-9]/g, ''))}
-    />
-    <Button appearance="outline" accessoryLeft={starIcon} style={{marginTop: 10}} onPress={
-      ()=>{
-        pickImage();
+      {
+        //image
       }
-    }>Pick Image</Button>
+      <View style={{flex:1}}>
+        <Image style={{width:"90%",height:undefined,aspectRatio:1}} resizeMode="contain" source={image}/>
+      </View>
+      {
+        //title, bounty, image picker
+      }
+      <View style={{flex:1,marginRight:10}}>
+        <Input
+          style={styles.input}
+          textStyle={styles.inputText}
+          size='large'
+        placeholder='Enter Wante title..'
+        value={title}
+        /* caption="Get people interested in the bounty" */
+        label='Wante Title'
+        onChangeText={nextValue => setTitle(nextValue)}
+      />
+      <Input
+        placeholder='Enter bounty amount..'
+        style={styles.input}
+        size={'large'}
+        value={amount}
+        /* caption="How much are you willing to give up?" */
+        label='Wante Amount'
+        accessoryRight={(props)=><Icon name="gift-outline" {...props}/>}
+        onChangeText={nextValue => setAmount(nextValue.replace(/[^0-9]/g, ''))}
+      />
+      <Button appearance="outline" accessoryLeft={starIcon} style={{marginTop: 10}} onPress={
+        ()=>{
+          pickImage();
+        }
+      }>Pick Image</Button>
+    </View>
   </View>
-  </View>
+
+  {
+    //who what why when were inputs
+  }
   <Input
     placeholder='Enter description'
     style={styles.input}
@@ -359,14 +373,15 @@ const WantePage = ({route}) => {
     onChangeText={nextValue => setWhy(nextValue)}
     onSubmitEditing={Keyboard.dismiss}
   />
-  
 
+  {
+    //SUBMIT BUTTON
+  }
   <Button style={{width:'100%', marginTop: 10, marginBottom: 175}} onPress={()=>{
     getDonations();
   }}/* accessoryRight={StarIcon} */>
     GET DONATIONS NOW!
   </Button>
-
 
   </ScrollView>
 )
