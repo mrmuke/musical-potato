@@ -1,4 +1,4 @@
-import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, StyleSheet, Text, Touchable, TouchableOpacity, View, ViewPagerAndroid } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps'
 import React, { useState, useRef, useEffect } from 'react';
 import * as Location from 'expo-location';
@@ -8,36 +8,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapViewDirections from 'react-native-maps-directions';
 import * as Progress from 'react-native-progress';
 import { Camera } from 'expo-camera'
-import mapStyle from '../assets/mapStyle.json'
-function calcCrow(lat1, lon1, lat2, lon2) {
-    var R = 6371; // km
-    var dLat = toRad(lat2 - lat1);
-    var dLon = toRad(lon2 - lon1);
-    var lat1 = toRad(lat1);
-    var lat2 = toRad(lat2);
 
-    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c;
-    return d;
-  }
-  function toRad(Value) {
-    return Value * Math.PI / 180;
-  }
 const Discover = ({ route }) => {
   const [errorMsg, setErrorMsg] = useState(null);
   const [markers, setMarkers] = useState([])
-  const [curLoc,setCurLoc]=useState(null)
+  const [curLoc, setCurLoc] = useState(null)
+  const [curIndex, setCurIndex] = useState(0)
 
   const [position, setPosition] = useState(null)
   const [gettingPosition, setGettingPosition] = useState(true)
   const mapRef = useRef(null);
-  const [activeBounty, setActiveBounty] = useState(null)
-  /* const [showActiveBounties, setShowActiveBounties] = useState(false)
-  const [showSuggestedRoute, setShowSuggestedRoute] = useState(false)  */ 
-
-
+  const [activeBounty, setActiveBounties] = useState([])
+  const [showActiveBounties, setShowActiveBounties] = useState(false)
+  const [showSuggestedRoute, setShowSuggestedRoute] = useState(false)  
   /*   
       compute suggested route 
     update my location button or live tracking
@@ -52,7 +35,6 @@ const Discover = ({ route }) => {
       different colors and custom map directions view
       dayu plan out trip realtime wallet updating
       on click bounty, update all or just one
-      right and left find closest instead
 
       blockchain project
       hackathons and hackerrank and kaggle
@@ -66,9 +48,9 @@ const Discover = ({ route }) => {
   }, [route.params])
   useEffect(() => {
     myLocation()
-    getActiveBounty()
+    getActiveBounties()
   }, [])
-  async function getActiveBounty() {
+  async function getActiveBounties() {
     fetch(`${API_URL.api}/api/bounty/getActive`, {
       headers: {
 
@@ -76,8 +58,7 @@ const Discover = ({ route }) => {
       },
       credentials: "same-origin"
     }).then(result => result.json()).then(result => {
-      setActiveBounty(result)
-      calculateViewingBox(result)
+      setActiveBounties(result)
     })
   }
   async function myLocation() {
@@ -106,42 +87,18 @@ const Discover = ({ route }) => {
     }).then(result => result.json()).then(result => {
       setMarkers(result)
       if (route.params && route.params.id) {
-        let obj = result.find(item => item.id == route.params.id)
+        let index = result.findIndex(item => item.id == route.params.id)
 
-        changeRegion(obj)
+        changeRegion(index, result)
       }
     })
   }
-
-  function findClosest(isLeft){
-      var closest = null
-      var least=10000000000
-      for(var i=0;i<markers.length;i++){
-          let dist = calcCrow(markers[i].lat,markers[i].lng,curLoc.lat,curLoc.lng)
-          let check = isLeft?markers[i].lat<curLoc.lat:markers[i].lat>curLoc.lat
-
-        if(check&&dist<least&&markers[i].id!=curLoc.id){
-            least=dist
-            closest=markers[i]
-            }
- 
-         
-        }
-       if(closest){
-        mapRef.current.animateToRegion({
-            latitude: closest.lat,
-            longitude: closest.lng,
-            latitudeDelta: 0.007,
-            longitudeDelta: 0.007,
-      
-          })
-       }
-  }
-  function changeRegion(obj) {
-    setCurLoc(obj)
+  function changeRegion(index, result) {
+    setCurIndex(index)
+    setCurLoc(result[index])
     mapRef.current.animateToRegion({
-      latitude: obj.lat,
-      longitude: obj.lng,
+      latitude: result[index].lat,
+      longitude: result[index].lng,
       latitudeDelta: 0.007,
       longitudeDelta: 0.007,
 
@@ -172,30 +129,9 @@ const Discover = ({ route }) => {
 
 
     }).then(result => result.json()).then(response => {
-      setActiveBounty(activeBounty)
+      setActiveBounties(activeBounties.concat(response))
     })
-  }
-  const midpoint = ([x1, y1], [x2, y2]) => [(x1 + x2) / 2, (y1 + y2) / 2];
-  function calculateViewingBox(active){
-    let lat = active.bounty.lat
-    let lng = active.bounty.lng
-
-    const { width, height } = Dimensions.get('window');
-    const ASPECT_RATIO = width / height;
-    let mid=midpoint([lat,lng],[position.latitude,position.longitude])
-    let centerLat=mid[0]
-    let centerLng= mid[1]
-    const latDelta = Math.abs(lat-position.latitude)
-    const lngDelta = latDelta * ASPECT_RATIO;
-
-    mapRef.current.animateToRegion({
-        latitude: centerLat,
-        longitude: centerLng,
-        latitudeDelta:latDelta,
-        longitudeDelta: lngDelta
-      })
-  }
-
+  }//
   return (
     <View
       style={{
@@ -204,38 +140,24 @@ const Discover = ({ route }) => {
         <MapView
           provider={MapView.PROVIDER_GOOGLE}
           ref={mapRef}
-          customMapStyle={mapStyle} 
-          initialRegion={{
-            latitude: 22.3193,
-            longitude: 114.1694, latitudeDelta: 0.0922, longitudeDelta: 0.0421
+          customMapStyle={mapStyle} initialRegion={{
+            latitude: 22.3193/* location.coords.latitude */,
+            longitude: 114.1694/* location.coords.longitude */, latitudeDelta: 0.0922, longitudeDelta: 0.0421
           }} style={styles.map} >
-              {activeBounty?
-              <MapViewDirections
-                origin={position}
-    
-                destination={{ latitude: b.bounty.lat, longitude: b.bounty.lng }}
-                apikey="AIzaSyAPOOnlu8YXdWsyM3uUkz3tU7AeDWgoQqA"
-                strokeWidth={4}
-                key={b.id}
-                strokeColor={"#fff"
-                }/* swipe up for current bounty */
-              />
-              :
-              <>
           {position && <Marker
 
             coordinate={position}
             title={"This is Me"}
             description={"Fight the Fires!"}
 
-          />}{
-          markers.map((marker, index) => (
+          />}
+          {markers.map((marker, index) => (
             <Marker
               key={index}
               coordinate={{ longitude: marker.lng, latitude: marker.lat }}
               title={marker.title}
               description={marker.description}
-              onPress={() => { setCurLoc(marker) }}
+              onPress={() => { setCurLoc(marker); setCurIndex(index) }}
 
             >
               <View style={{ flexDirection: 'column', alignItems: 'center', marginRight: 13 }}>
@@ -250,8 +172,18 @@ const Discover = ({ route }) => {
             </Marker>
           ))}
 
+          {position && activeBounties.length > 0 && activeBounties.map(b => (<MapViewDirections
+            origin={position}
+
+            destination={{ latitude: b.bounty.lat, longitude: b.bounty.lng }}
+            apikey="AIzaSyAPOOnlu8YXdWsyM3uUkz3tU7AeDWgoQqA"
+            strokeWidth={4}
+            key={b.id}
+            strokeColor={"#fff"
+            }
+          />))}
           <Button style={{ position: 'absolute', right: 5, top: 5 }} onPress={() => { moveToUser() }} accessoryLeft={props => <Icon name="navigation-2-outline" {...props} />}></Button>
-          <Modal visible={gettingPosition} style={{ backgroundColor: "white", padding: 20, borderRadius: 15 }}><Spinner style={{ position: 'absolute' }} /></Modal>{/*
+          <Modal visible={gettingPosition} style={{ backgroundColor: "white", padding: 20, borderRadius: 15 }}><Spinner style={{ position: 'absolute' }} /></Modal>
           <Button accessoryLeft={props => <Icon name="checkmark-circle-outline" {...props} />} style={{ position: 'absolute', left: 5, top: 5 }} onPress={() => setShowActiveBounties(true)} ></Button>
 
           <Modal visible={showActiveBounties} onBackdropPress={() => setShowActiveBounties(false)} backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
@@ -263,7 +195,7 @@ const Discover = ({ route }) => {
             ))}
               <Button onPress={() => { setShowSuggestedRoute(true); setShowActiveBounties(false) }} accessoryLeft={props => <Icon {...props} name="map-outline" />}><Text>Suggested Route</Text></Button>
             </> : <View style={{ backgroundColor: "white", padding: 15, borderRadius: 10 }}><Text style={{ fontSize: 20 }}>No Active Bounties</Text></View>}
-              
+
           </Modal>
           {showSuggestedRoute &&
             <MapViewDirections
@@ -275,19 +207,21 @@ const Discover = ({ route }) => {
               strokeWidth={4}
               strokeColor={"#3863ba"
               }
-            />} */}
-</>}         </MapView> : <View style={{
+            />}
+          {/* Modal to close mpa view direcionts */}
+        </MapView> : <View style={{
           alignItems:
             'center', padding: 20
         }}><Button status="control" onPress={() => setErrorMsg(null)} style={{ alignSelf: 'flex-start' }} accessoryLeft={props => <Icon {...props} name="chevron-left-outline" />}>Back</Button><Image source={require('../images/location.png')} style={{ width: 125, height: 125 }} resizeMode='contain' /><Text style={{ fontSize: 30 }}>OOPS!</Text><Text style={{ fontSize: 15 }}>Please turn on location services!</Text></View>
       }
-      {curLoc && position && <BountyInfo position={position} createActiveBounty={createActiveBounty} activeBounty={activeBounty} setActiveBounty={setActiveBounty} bounty={curLoc} setBounty={setCurLoc} findClosest={findClosest}  />
+      {curLoc && position && <BountyInfo setActiveBounties={setActiveBounties} position={position} activeBounties={activeBounties} createActiveBounty={createActiveBounty} activeBounties={activeBounties} setActiveBounties={setActiveBounties} position={position} bounty={curLoc} setBounty={setCurLoc} changeRegion={changeRegion} curIndex={curIndex} markers={markers} />
       }
     </View>
   )
 }
-function BountyInfo({ position, activeBounty, setActiveBounty, createActiveBounty, bounty, setBounty, findClosest }) {
+function BountyInfo({ position, activeBounties, setActiveBounties, createActiveBounty, bounty, setBounty, changeRegion, curIndex, markers, }) {
   const [modalHeight, setHeight] = useState(null)
+  let activeBounty = activeBounties.findIndex(e => e.bounty.id == bounty.id)
   const [showSubmit, setShowSubmit] = useState(false)
   const [type, setType] = useState(Camera.Constants.Type.back);
   const [camera, setCamera] = useState(null)
@@ -298,9 +232,23 @@ function BountyInfo({ position, activeBounty, setActiveBounty, createActiveBount
     const { x, y, width, height } = layout;
     setHeight(height)
   }
-  
+  function calcCrow(lat1, lon1, lat2, lon2) {
+    var R = 6371; // km
+    var dLat = toRad(lat2 - lat1);
+    var dLon = toRad(lon2 - lon1);
+    var lat1 = toRad(lat1);
+    var lat2 = toRad(lat2);
+
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var d = R * c;
+    return d;
+  }
   async function startWorking() {
-    setActiveBounty({ ...activeBounty, started: true })
+    let markers = [...activeBounties]
+    markers[activeBounty] = { ...markers[activeBounty], started: true };
+    setActiveBounties(markers)
     fetch(`${API_URL.api}/api/bounty/startWorking`, {
       method: 'PUT',
       body: JSON.stringify({ bounty: bounty.id }),
@@ -335,14 +283,15 @@ function BountyInfo({ position, activeBounty, setActiveBounty, createActiveBount
   }
 
   // Converts numeric degrees to radians
-
+  function toRad(Value) {
+    return Value * Math.PI / 180;
+  }
   function submitForReview(){
 
   }
-
   return (
     <>
-      <Modal visible={true} style={{ width: '100%', position: 'absolute', top: Dimensions.get("window").height - modalHeight }} >
+      <Modal visible={bounty} style={{ width: '100%', position: 'absolute', top: Dimensions.get("window").height - modalHeight }} >
         <Card style={{ height: modalHeight }} disabled={true} onLayout={(event) => { findHeight(event.nativeEvent.layout) }}>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <View>
@@ -353,8 +302,8 @@ function BountyInfo({ position, activeBounty, setActiveBounty, createActiveBount
 
           </View>
           <Text style={{ color: "grey" }}>{bounty.description}</Text>
-          <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}><Text>Started By: {bounty.user.username}</Text><ButtonGroup ><Button onPress={() => findClosest(true)} accessoryLeft={(props) => <Icon {...props} name="chevron-left-outline" />}></Button><Button onPress={() => findClosest(false)} accessoryLeft={(props) => <Icon {...props} name="chevron-right-outline" />}></Button></ButtonGroup>
-          </View>{!activeBounty? <Button onPress={() => { createActiveBounty(bounty) }} style={{ marginVertical: 10 }} status="success">Start</Button> : <View style={{ marginVertical: 15, alignItems: 'center' }} >{!activeBounty.started ? (calcCrow(position.latitude, position.longitude, bounty.lat, bounty.lng) < 0.3 ? <Button style={{ width: "100%" }} onPress={() => startWorking()}>Start Working!</Button> : <><Progress.Bar color="#E84C3D" progress={0.3} width={300} /><View style={{ borderRadius: 3, alignSelf: 'baseline', padding: 5, margin: 5, backgroundColor: "#E84C3D", }}><Text style={{ color: "white" }}>First Step: Move to Bounty</Text></View></>) : <><Progress.Bar color="#E84C3D" progress={0.6} width={300} /><View style={{ margin: 5 }}><Button onPress={() => setShowSubmit(true)}>Second Step: Submit Work for Review</Button></View></>}</View>}
+          <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}><Text>Started By: {bounty.user.username}</Text><ButtonGroup ><Button onPress={() => changeRegion(curIndex == 0 ? markers.length - 1 : curIndex - 1, markers)} accessoryLeft={(props) => <Icon {...props} name="chevron-left-outline" />}></Button><Button onPress={() => changeRegion(curIndex == markers.length - 1 ? 0 : curIndex + 1, markers)} accessoryLeft={(props) => <Icon {...props} name="chevron-right-outline" />}></Button></ButtonGroup>
+          </View>{activeBounty == -1 ? <Button onPress={() => { createActiveBounty(bounty) }} style={{ marginVertical: 10 }} status="success">Start</Button> : <View style={{ marginVertical: 15, alignItems: 'center' }} >{!activeBounties[activeBounty].started ? (calcCrow(position.latitude, position.longitude, bounty.lat, bounty.lng) < 0.3 ? <Button style={{ width: "100%" }} onPress={() => startWorking()}>Start Working!</Button> : <><Progress.Bar color="#E84C3D" progress={0.3} width={300} /><View style={{ borderRadius: 3, alignSelf: 'baseline', padding: 5, margin: 5, backgroundColor: "#E84C3D", }}><Text style={{ color: "white" }}>First Step: Move to Bounty</Text></View></>) : <><Progress.Bar color="#E84C3D" progress={0.6} width={300} /><View style={{ margin: 5 }}><Button onPress={() => setShowSubmit(true)}>Second Step: Submit Work for Review</Button></View></>}</View>}
         </Card>
       </Modal>
       <Modal visible={showSubmit} backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} onBackdropPress={() => setShowSubmit(false)}>{!showCamera ? <View style={{ width: 250 }}><Input accessoryLeft={props => <Icon {...props} name="text-outline" />} placeholder="Optional Text.." />
@@ -430,4 +379,205 @@ const styles = StyleSheet.create({
 
 })
 
+let mapStyle = [
+  {
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "off"
+      },
+      {
+        "color": "#f49f53"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape",
+    "stylers": [
+      {
+        "color": "#f9ddc5"
+      },
+      {
+        "lightness": -7
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "stylers": [
+      {
+        "color": "#813033"
+      },
+      {
+        "lightness": 43
+      }
+    ]
+  },
+  {
+    "featureType": "poi.business",
+    "stylers": [
+      {
+        "color": "#645c20"
+      },
+      {
+        "lightness": 38
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "stylers": [
+      {
+        "color": "#1994bf"
+      },
+      {
+        "saturation": -69
+      },
+      {
+        "gamma": 0.99
+      },
+      {
+        "lightness": 43
+      }
+    ]
+  },
+  {
+    "featureType": "road.local",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#f19f53"
+      },
+      {
+        "weight": 1.3
+      },
+      {
+        "visibility": "on"
+      },
+      {
+        "lightness": 16
+      }
+    ]
+  },
+  {
+    "featureType": "poi.business"
+  },
+  {
+    "featureType": "poi.park",
+    "stylers": [
+      {
+        "color": "#645c20"
+      },
+      {
+        "lightness": 39
+      }
+    ]
+  },
+  {
+    "featureType": "poi.school",
+    "stylers": [
+      {
+        "color": "#a95521"
+      },
+      {
+        "lightness": 35
+      }
+    ]
+  },
+  {},
+  {
+    "featureType": "poi.medical",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#813033"
+      },
+      {
+        "lightness": 38
+      },
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {
+    "elementType": "labels"
+  },
+  {
+    "featureType": "poi.sports_complex",
+    "stylers": [
+      {
+        "color": "#9e5916"
+      },
+      {
+        "lightness": 32
+      }
+    ]
+  },
+  {},
+  {
+    "featureType": "poi.government",
+    "stylers": [
+      {
+        "color": "#9e5916"
+      },
+      {
+        "lightness": 46
+      }
+    ]
+  },
+  {
+    "featureType": "transit.station",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.line",
+    "stylers": [
+      {
+        "color": "#813033"
+      },
+      {
+        "lightness": 22
+      }
+    ]
+  },
+  {
+    "featureType": "transit",
+    "stylers": [
+      {
+        "lightness": 38
+      }
+    ]
+  },
+  {
+    "featureType": "road.local",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#f19f53"
+      },
+      {
+        "lightness": -10
+      }
+    ]
+  },
+  {},
+  {},
+  {}
+]
 export default Discover;
