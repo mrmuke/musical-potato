@@ -252,7 +252,7 @@ const Discover = ({ route }) => {
 
               <Button style={{ position: 'absolute', right: 5, top: 5 }} onPress={() => { moveToUser() }} accessoryLeft={props => <Icon name="navigation-2-outline" {...props} />}></Button>
               
-              <Modal visible={gettingPosition}  style={{ backgroundColor: "white", padding: 20, borderRadius: 15 }}><Spinner style={{ position: 'absolute' }} /></Modal>{/*
+             {/*  <Modal visible={gettingPosition}  style={{ backgroundColor: "white", padding: 20, borderRadius: 15 }}><Spinner style={{ position: 'absolute' }} /></Modal> */}{/*
           <Button accessoryLeft={props => <Icon name="checkmark-circle-outline" {...props} />} style={{ position: 'absolute', left: 5, top: 5 }} onPress={() => setShowActiveBounties(true)} ></Button>
 
           <Modal visible={showActiveBounties} onBackdropPress={() => setShowActiveBounties(false)} backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
@@ -368,6 +368,9 @@ function ActiveBounty({activeBounty,setActiveBounty,position}){
       setActiveBounty({ ...activeBounty, review: true })
     })
   }
+  if(!activeBounty.bounty.lat){
+    return null
+  }
   return (
     <><Marker
 
@@ -403,7 +406,7 @@ function ActiveBounty({activeBounty,setActiveBounty,position}){
                 }
               /><Modal visible={true} style={{position:'absolute',bottom:0,backgroundColor:"white",width:"100%",padding:10,top: Dimensions.get("window").height - 200 }}>
                 <Button onPress={() => setShowActiveBountyCancel(true)} status="control" accessoryLeft={props => <Icon name="close-outline" style={{ width: 20, height: 20 }} {...props} />}>Cancel</Button>
-                <View style={{ marginVertical: 15, alignItems: 'center' }} >{activeBounty.started ? (calcCrow(position.latitude, position.longitude, bounty.lat, bounty.lng) < 0.3 ? <Button style={{ width: "100%" }} onPress={() => startWorking()}>Start Working!</Button> : <><Progress.Bar color="#E84C3D" progress={0.3} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width:300}}><Text style={{ color: "white" }}>First Step: Move to Bounty</Text></View></>) :!activeBounty.review?<><Progress.Bar color="#E84C3D" progress={1} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width:300}}><Text style={{ color: "white" }}>Final Step: Awaiting Approval</Text></View></>: <><Progress.Bar color="#E84C3D" progress={0.6} width={300} /><View style={{ margin: 5 }}><Button onPress={() => setShowSubmit(true)}>Second Step: Submit Work for Review</Button></View></>}</View>
+                <View style={{ marginVertical: 15, alignItems: 'center' }} >{activeBounty.started ? (calcCrow(position.latitude, position.longitude, bounty.lat, bounty.lng) < 0.3 ? <Button style={{ width: "100%" }} onPress={() => startWorking()}>Start Working!</Button> : <><Progress.Bar color="#E84C3D" progress={0.3} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width:300}}><Text style={{ color: "white" }}>First Step: Move to Bounty</Text></View></>) :activeBounty.review?<><Progress.Bar color="#E84C3D" progress={1} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width:300}}><Text style={{ color: "white" }}>Final Step: Awaiting Approval</Text></View></>: <><Progress.Bar color="#E84C3D" progress={0.6} width={300} /><View style={{ margin: 5 }}><Button onPress={() => setShowSubmit(true)}>Second Step: Submit Work for Review</Button></View></>}</View>
 
                 </Modal>{/* swipe up for current bounty  */}
   
