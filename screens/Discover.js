@@ -172,9 +172,11 @@ const Discover = ({ route }) => {
 
 
     }).then(result => result.json()).then(response => {
+      response={...response,bounty:curLoc}
+      setActiveBounty(response) 
       setCurLoc(null)
-      //calculateViewingBox(response, position)
-      setActiveBounty(response)
+      calculateViewingBox(response, position)
+      
       
     })
   }
@@ -368,9 +370,7 @@ function ActiveBounty({activeBounty,setActiveBounty,position}){
       setActiveBounty({ ...activeBounty, review: true })
     })
   }
-  if(!activeBounty.bounty.lat){
-    return null
-  }
+
   return (
     <><Marker
 
@@ -448,7 +448,8 @@ function BountyInfo({ createActiveBounty, bounty, setBounty, findClosest }) {
   /* function findHeight(layout) {
     const { x, y, width, height } = layout;
     setHeight(height)
-  } */
+  } 
+  full Height modal if expand read more description*/
 
   
 
