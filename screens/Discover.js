@@ -348,7 +348,7 @@ function ActiveBounty({activeBounty,setActiveBounty,position}){
     const photoData = await camera.takePictureAsync({base64:true});
     setShowCamera(false)
     setImagePreview(photoData.uri)
-    setImageData(photoData.base64)
+    setImageData(/* 'data:image/jpeg;base64,' +  */photoData.base64)
   }
 
   // Converts numeric degrees to radians
@@ -362,7 +362,8 @@ function ActiveBounty({activeBounty,setActiveBounty,position}){
         "Authorization": "Token " + await AsyncStorage.getItem('token')
       },
       credentials: "same-origin"
-    }).then(()=>{
+    }).then(response=>response.json()).then(response=>{
+      console.log(response)
       setShowSubmit(false)
       setActiveBounty({ ...activeBounty, review: true })
     })
@@ -406,7 +407,7 @@ function ActiveBounty({activeBounty,setActiveBounty,position}){
 
                 </Modal>{/* swipe up for current bounty  */}
   
-  <Modal visible={showSubmit} backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} onBackdropPress={() => setShowSubmit(false)}>{!showCamera ? <View style={{ width: 250 }}><Input value={text} onChange={e=>setText(e.target.value)} accessoryLeft={props => <Icon {...props} name="text-outline" />} placeholder="Optional Text.." />
+  <Modal visible={showSubmit} backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} onBackdropPress={() => setShowSubmit(false)}>{!showCamera ? <View style={{ width: 250 }}><Input value={text} onChangeText={e=>setText(e)} accessoryLeft={props => <Icon {...props} name="text-outline" />} placeholder="Optional Text.." />
         {imagePreview ? <View style={{ height: 400, marginVertical: 10 }}><Button style={{ position: 'absolute', zIndex: 1, right: 0 }} status="control" accessoryLeft={props => <Icon name="close-square-outline" {...props} />} onPress={() => setImagePreview(null)}></Button><Image style={{ borderRadius: 10, flex: 1, }} source={{ uri: imagePreview }} /></View> : <Button onPress={checkCameraPermission} status="success" style={{ marginVertical: 10 }} accessoryLeft={props => <Icon {...props} name="camera-outline" />}>Optional: Take Picture</Button>}
 
         <Button onPress={submitForReview}>Submit</Button></View> :
