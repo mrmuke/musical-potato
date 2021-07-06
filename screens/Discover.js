@@ -283,7 +283,7 @@ const Discover = ({ route }) => {
             'center', padding: 20
         }}><Button status="control" onPress={() => setErrorMsg(null)} style={{ alignSelf: 'flex-start' }} accessoryLeft={props => <Icon {...props} name="chevron-left-outline" />}>Back</Button><Image source={require('../images/location.png')} style={{ width: 125, height: 125 }} resizeMode='contain' /><Text style={{ fontSize: 30 }}>OOPS!</Text><Text style={{ fontSize: 15 }}>Please turn on location services!</Text></View>
       }
-      {curLoc && position && <BountyInfo createActiveBounty={createActiveBounty} bounty={curLoc} setBounty={setCurLoc} findClosest={findClosest} />
+      {curLoc && position &&!activeBounty&& <BountyInfo createActiveBounty={createActiveBounty} bounty={curLoc} setBounty={setCurLoc} findClosest={findClosest} />
       }
     </View>
   )
@@ -442,19 +442,19 @@ function ActiveBounty({activeBounty,setActiveBounty,position}){
       }</Modal></>)
 }
 function BountyInfo({ createActiveBounty, bounty, setBounty, findClosest }) {
-  const [modalHeight, setHeight] = useState(null)
+  const [modalHeight, setHeight] = useState(275)
   
 
-  function findHeight(layout) {
+  /* function findHeight(layout) {
     const { x, y, width, height } = layout;
     setHeight(height)
-  }
+  } */
 
   
 
   return (
       <Modal visible={true} style={{ width: '100%', position: 'absolute', top: Dimensions.get("window").height - modalHeight }} >
-        <Card style={{ height: modalHeight }} disabled={true} onLayout={(event) => { findHeight(event.nativeEvent.layout) }}>
+        <Card style={{ height: modalHeight }} disabled={true} /* onLayout={(event) => { findHeight(event.nativeEvent.layout) }} */>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <View>
               <Text style={{ color: "darkgrey" }}>{bounty.type} Event</Text>
