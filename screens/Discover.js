@@ -8,34 +8,35 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapViewDirections from 'react-native-maps-directions';
 import * as Progress from 'react-native-progress';
 import { Camera } from 'expo-camera'
-import mapStyle from '../assets/mapStyle.json'
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+const mapStyle = require('../assets/mapStyle.json')
 function calcCrow(lat1, lon1, lat2, lon2) {
-    var R = 6371; // km
-    var dLat = toRad(lat2 - lat1);
-    var dLon = toRad(lon2 - lon1);
-    var lat1 = toRad(lat1);
-    var lat2 = toRad(lat2);
+  var R = 6371; // km
+  var dLat = toRad(lat2 - lat1);
+  var dLon = toRad(lon2 - lon1);
+  var lat1 = toRad(lat1);
+  var lat2 = toRad(lat2);
 
-    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c;
-    return d;
-  }
-  function toRad(Value) {
-    return Value * Math.PI / 180;
-  }
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  var d = R * c;
+  return d;
+}
+function toRad(Value) {
+  return Value * Math.PI / 180;
+}
 const Discover = ({ route }) => {
   const [errorMsg, setErrorMsg] = useState(null);
   const [markers, setMarkers] = useState([])
-  const [curLoc,setCurLoc]=useState(null)
+  const [curLoc, setCurLoc] = useState(null)
 
   const [position, setPosition] = useState(null)
   const [gettingPosition, setGettingPosition] = useState(true)
   const mapRef = useRef(null);
   const [activeBounty, setActiveBounty] = useState(null)
   /* const [showActiveBounties, setShowActiveBounties] = useState(false)
-  const [showSuggestedRoute, setShowSuggestedRoute] = useState(false)  */ 
+  const [showSuggestedRoute, setShowSuggestedRoute] = useState(false)  */
 
 
   /*   
@@ -53,6 +54,7 @@ const Discover = ({ route }) => {
       dayu plan out trip realtime wallet updating
       on click bounty, update all or just one
       right and left find closest instead
+      view instead of modal
 
       blockchain project
       hackathons and hackerrank and kaggle
@@ -66,18 +68,20 @@ const Discover = ({ route }) => {
   }, [route.params])
   useEffect(() => {
     myLocation()
-    getActiveBounty()
+
   }, [])
-  async function getActiveBounty() {
+  async function getActiveBounty(loc) {
     fetch(`${API_URL.api}/api/bounty/getActive`, {
       headers: {
-
         "Authorization": "Token " + await AsyncStorage.getItem('token')
       },
       credentials: "same-origin"
     }).then(result => result.json()).then(result => {
-      setActiveBounty(result)
-      calculateViewingBox(result)
+      if (!result.hasOwnProperty('msg')) {
+        setActiveBounty(result)
+        calculateViewingBox(result, loc)
+      }
+
     })
   }
   async function myLocation() {
@@ -89,6 +93,7 @@ const Discover = ({ route }) => {
 
 
       let location = await Location.getCurrentPositionAsync({});
+      getActiveBounty(location.coords)
       setPosition(location.coords)
     }
     setGettingPosition(false)
@@ -113,29 +118,24 @@ const Discover = ({ route }) => {
     })
   }
 
-  function findClosest(isLeft){
-      var closest = null
-      var least=10000000000
-      for(var i=0;i<markers.length;i++){
-          let dist = calcCrow(markers[i].lat,markers[i].lng,curLoc.lat,curLoc.lng)
-          let check = isLeft?markers[i].lat<curLoc.lat:markers[i].lat>curLoc.lat
+  function findClosest(isLeft) {
+    var closest = null
+    var least = 10000000000
+    for (var i = 0; i < markers.length; i++) {
+      let dist = calcCrow(markers[i].lat, markers[i].lng, curLoc.lat, curLoc.lng)
+      let check = isLeft ? markers[i].lat > curLoc.lat : markers[i].lat < curLoc.lat
 
-        if(check&&dist<least&&markers[i].id!=curLoc.id){
-            least=dist
-            closest=markers[i]
-            }
- 
-         
-        }
-       if(closest){
-        mapRef.current.animateToRegion({
-            latitude: closest.lat,
-            longitude: closest.lng,
-            latitudeDelta: 0.007,
-            longitudeDelta: 0.007,
-      
-          })
-       }
+      if (check && dist < least && markers[i].id != curLoc.id) {
+        least = dist
+        closest = markers[i]
+      }
+
+
+    }
+    if (closest) {
+      changeRegion(closest)
+
+    }
   }
   function changeRegion(obj) {
     setCurLoc(obj)
@@ -172,29 +172,38 @@ const Discover = ({ route }) => {
 
 
     }).then(result => result.json()).then(response => {
-      setActiveBounty(activeBounty)
+      setCurLoc(null)
+      //calculateViewingBox(response, position)
+      setActiveBounty(response)
+      
     })
   }
   const midpoint = ([x1, y1], [x2, y2]) => [(x1 + x2) / 2, (y1 + y2) / 2];
-  function calculateViewingBox(active){
+  function calculateViewingBox(active, loc) {
+    console.log(loc)
+    console.log(active)
     let lat = active.bounty.lat
     let lng = active.bounty.lng
 
     const { width, height } = Dimensions.get('window');
     const ASPECT_RATIO = width / height;
-    let mid=midpoint([lat,lng],[position.latitude,position.longitude])
-    let centerLat=mid[0]
-    let centerLng= mid[1]
-    const latDelta = Math.abs(lat-position.latitude)
+    let mid = midpoint([lat, lng], [loc.latitude, loc.longitude])
+    let centerLat = mid[0]
+    let centerLng = mid[1]
+    
+    let latDelta = Math.abs(lat - loc.latitude)
+    latDelta *= 7
     const lngDelta = latDelta * ASPECT_RATIO;
+    
 
     mapRef.current.animateToRegion({
-        latitude: centerLat,
-        longitude: centerLng,
-        latitudeDelta:latDelta,
-        longitudeDelta: lngDelta
-      })
+      latitude: centerLat,
+      longitude: centerLng,
+      latitudeDelta: latDelta,
+      longitudeDelta: lngDelta
+    })
   }
+  
 
   return (
     <View
@@ -204,54 +213,46 @@ const Discover = ({ route }) => {
         <MapView
           provider={MapView.PROVIDER_GOOGLE}
           ref={mapRef}
-          customMapStyle={mapStyle} 
+          customMapStyle={mapStyle}
           initialRegion={{
             latitude: 22.3193,
             longitude: 114.1694, latitudeDelta: 0.0922, longitudeDelta: 0.0421
-          }} style={styles.map} >
-              {activeBounty?
-              <MapViewDirections
-                origin={position}
-    
-                destination={{ latitude: b.bounty.lat, longitude: b.bounty.lng }}
-                apikey="AIzaSyAPOOnlu8YXdWsyM3uUkz3tU7AeDWgoQqA"
-                strokeWidth={4}
-                key={b.id}
-                strokeColor={"#fff"
-                }/* swipe up for current bounty */
-              />
-              :
-              <>
-          {position && <Marker
+          }} style={styles.map}>
+          {activeBounty && position ?
+            <ActiveBounty activeBounty={activeBounty} setActiveBounty={setActiveBounty}  position={position} />
+            :
+            <>
+              {position && <Marker
 
-            coordinate={position}
-            title={"This is Me"}
-            description={"Fight the Fires!"}
+                coordinate={position}
+                title={"This is Me"}
+                description={"Fight the Fires!"}
 
-          />}{
-          markers.map((marker, index) => (
-            <Marker
-              key={index}
-              coordinate={{ longitude: marker.lng, latitude: marker.lat }}
-              title={marker.title}
-              description={marker.description}
-              onPress={() => { setCurLoc(marker) }}
+              />}{
+                markers.map((marker, index) => (
+                  <Marker
+                    key={index}
+                    coordinate={{ longitude: marker.lng, latitude: marker.lat }}
+                    title={marker.title}
+                    description={marker.description}
+                    onPress={() => { setCurLoc(marker) }}
 
-            >
-              <View style={{ flexDirection: 'column', alignItems: 'center', marginRight: 13 }}>
-                <Image
-                  source={require('../images/bounty.png')}
-                  style={{ width: 26, height: 28 }}
-                  resizeMode="contain"
-                />
-                <Timer marker={marker} />
-              </View>
-              <Callout tooltip={true} />
-            </Marker>
-          ))}
+                  >
+                    <View style={{ flexDirection: 'column', alignItems: 'center', marginRight: 13 }}>
+                      <Image
+                        source={require('../images/bounty.png')}
+                        style={{ width: 26, height: 28 }}
+                        resizeMode="contain"
+                      />
+                      <Timer marker={marker} />
+                    </View>
+                    <Callout tooltip={true} />
+                  </Marker>
+                ))}
 
-          <Button style={{ position: 'absolute', right: 5, top: 5 }} onPress={() => { moveToUser() }} accessoryLeft={props => <Icon name="navigation-2-outline" {...props} />}></Button>
-          <Modal visible={gettingPosition} style={{ backgroundColor: "white", padding: 20, borderRadius: 15 }}><Spinner style={{ position: 'absolute' }} /></Modal>{/*
+              <Button style={{ position: 'absolute', right: 5, top: 5 }} onPress={() => { moveToUser() }} accessoryLeft={props => <Icon name="navigation-2-outline" {...props} />}></Button>
+              
+              <Modal visible={gettingPosition}  style={{ backgroundColor: "white", padding: 20, borderRadius: 15 }}><Spinner style={{ position: 'absolute' }} /></Modal>{/*
           <Button accessoryLeft={props => <Icon name="checkmark-circle-outline" {...props} />} style={{ position: 'absolute', left: 5, top: 5 }} onPress={() => setShowActiveBounties(true)} ></Button>
 
           <Modal visible={showActiveBounties} onBackdropPress={() => setShowActiveBounties(false)} backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
@@ -276,29 +277,44 @@ const Discover = ({ route }) => {
               strokeColor={"#3863ba"
               }
             />} */}
-</>}         </MapView> : <View style={{
+            </>}
+        </MapView> : <View style={{
           alignItems:
             'center', padding: 20
         }}><Button status="control" onPress={() => setErrorMsg(null)} style={{ alignSelf: 'flex-start' }} accessoryLeft={props => <Icon {...props} name="chevron-left-outline" />}>Back</Button><Image source={require('../images/location.png')} style={{ width: 125, height: 125 }} resizeMode='contain' /><Text style={{ fontSize: 30 }}>OOPS!</Text><Text style={{ fontSize: 15 }}>Please turn on location services!</Text></View>
       }
-      {curLoc && position && <BountyInfo position={position} createActiveBounty={createActiveBounty} activeBounty={activeBounty} setActiveBounty={setActiveBounty} bounty={curLoc} setBounty={setCurLoc} findClosest={findClosest}  />
+      {curLoc && position && <BountyInfo createActiveBounty={createActiveBounty} bounty={curLoc} setBounty={setCurLoc} findClosest={findClosest} />
       }
     </View>
   )
 }
-function BountyInfo({ position, activeBounty, setActiveBounty, createActiveBounty, bounty, setBounty, findClosest }) {
-  const [modalHeight, setHeight] = useState(null)
+function ActiveBounty({activeBounty,setActiveBounty,position}){
+  let bounty = activeBounty.bounty
+  const [showActiveBountyCancel,setShowActiveBountyCancel]=useState(false)
   const [showSubmit, setShowSubmit] = useState(false)
   const [type, setType] = useState(Camera.Constants.Type.back);
   const [camera, setCamera] = useState(null)
   const [showCamera, setShowCamera] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
+  const [imageData,setImageData]=useState(null)
+  const [text,setText]=useState("")
+  async function cancelActiveBounty(){
+    fetch(`${API_URL.api}/api/bounty/cancelActive`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": "Token " + await AsyncStorage.getItem('token')
+      },
+      credentials: "same-origin"
 
-  function findHeight(layout) {
-    const { x, y, width, height } = layout;
-    setHeight(height)
+
+
+    }).then(()=>{
+      setActiveBounty(null)
+      setShowActiveBountyCancel(false)
+    })
+    
   }
-  
   async function startWorking() {
     setActiveBounty({ ...activeBounty, started: true })
     fetch(`${API_URL.api}/api/bounty/startWorking`, {
@@ -329,38 +345,71 @@ function BountyInfo({ position, activeBounty, setActiveBounty, createActiveBount
     }
   }
   async function takePicture() {
-    const photoData = await camera.takePictureAsync();
+    const photoData = await camera.takePictureAsync({base64:true});
     setShowCamera(false)
     setImagePreview(photoData.uri)
+    setImageData(photoData.base64)
   }
 
   // Converts numeric degrees to radians
 
-  function submitForReview(){
-
+  async function submitForReview() {
+    fetch(`${API_URL.api}/api/bounty/submitActive`, {
+      method: 'POST',
+      body: JSON.stringify({ photo: imageData,text:text}),
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": "Token " + await AsyncStorage.getItem('token')
+      },
+      credentials: "same-origin"
+    }).then(()=>{
+      setShowSubmit(false)
+      setActiveBounty({ ...activeBounty, review: true })
+    })
   }
-
   return (
-    <>
-      <Modal visible={true} style={{ width: '100%', position: 'absolute', top: Dimensions.get("window").height - modalHeight }} >
-        <Card style={{ height: modalHeight }} disabled={true} onLayout={(event) => { findHeight(event.nativeEvent.layout) }}>
-          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
-            <View>
-              <Text style={{ color: "darkgrey" }}>{bounty.type} Event</Text>
-              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}><Text style={{ textDecorationLine: 'underline', textDecorationColor: "red", fontSize: 30 }}>{bounty.title}</Text><View style={{ borderRadius: 5, backgroundColor: "#9F3737", marginHorizontal: 5 }}><Text style={{ color: "white", padding: 3 }}>{bounty.numPeople == 1 ? "Individual" : bounty.numPeople + " people"}</Text></View></View>
-              <Text style={{ marginVertical: 5 }}>{bounty.amount} Bounty Credits</Text></View>
-            <Button onPress={() => setBounty(null)} status="control" accessoryLeft={props => <Icon name="close-outline" style={{ width: 20, height: 20 }} {...props} />}></Button>
+    <><Marker
 
-          </View>
-          <Text style={{ color: "grey" }}>{bounty.description}</Text>
-          <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}><Text>Started By: {bounty.user.username}</Text><ButtonGroup ><Button onPress={() => findClosest(true)} accessoryLeft={(props) => <Icon {...props} name="chevron-left-outline" />}></Button><Button onPress={() => findClosest(false)} accessoryLeft={(props) => <Icon {...props} name="chevron-right-outline" />}></Button></ButtonGroup>
-          </View>{!activeBounty? <Button onPress={() => { createActiveBounty(bounty) }} style={{ marginVertical: 10 }} status="success">Start</Button> : <View style={{ marginVertical: 15, alignItems: 'center' }} >{!activeBounty.started ? (calcCrow(position.latitude, position.longitude, bounty.lat, bounty.lng) < 0.3 ? <Button style={{ width: "100%" }} onPress={() => startWorking()}>Start Working!</Button> : <><Progress.Bar color="#E84C3D" progress={0.3} width={300} /><View style={{ borderRadius: 3, alignSelf: 'baseline', padding: 5, margin: 5, backgroundColor: "#E84C3D", }}><Text style={{ color: "white" }}>First Step: Move to Bounty</Text></View></>) : <><Progress.Bar color="#E84C3D" progress={0.6} width={300} /><View style={{ margin: 5 }}><Button onPress={() => setShowSubmit(true)}>Second Step: Submit Work for Review</Button></View></>}</View>}
-        </Card>
-      </Modal>
-      <Modal visible={showSubmit} backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} onBackdropPress={() => setShowSubmit(false)}>{!showCamera ? <View style={{ width: 250 }}><Input accessoryLeft={props => <Icon {...props} name="text-outline" />} placeholder="Optional Text.." />
-      {imagePreview ?<View style={{height:400,marginVertical:10}}><Button style={{position:'absolute',zIndex:1,right:0}} status="control" accessoryLeft={props=><Icon name="close-square-outline" {...props}/>} onPress={()=>setImagePreview(null)}></Button><Image  style={{ borderRadius: 10,flex:1,}} source={{ uri: imagePreview }} /></View>:<Button onPress={checkCameraPermission} status="success" style={{ marginVertical: 10 }} accessoryLeft={props => <Icon {...props} name="camera-outline" />}>Optional: Take Picture</Button>}
+              coordinate={position}
+              title={"This is Me"}
+              description={"Go to the Bounty"}
 
-      <Button onPress={submitForReview}>Submit</Button></View> :
+            />
+            <Modal backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}  onBackdropPress={()=>setShowActiveBountyCancel(false)} visible={showActiveBountyCancel}>
+              <View style={{backgroundColor:"white",padding:20,borderRadius:10}}>
+                <Text style={{fontSize:30,fontWeight:"500",textAlign:'center'}}>
+                Are you sure 
+                </Text>
+                <Text style={{marginVertical:10}}>
+                  you want to cancel this bounty?
+                </Text>
+                <Button accessoryLeft={props => <Icon name="close-circle-outline" style={{ width: 20, height: 20 }} {...props} />} onPress={cancelActiveBounty}> 500 coins </Button>
+              </View>
+            </Modal>
+              <Marker
+
+                coordinate={{ latitude: activeBounty.bounty.lat, longitude: activeBounty.bounty.lng }}
+                title={"Bounty"}
+                description={"Come here"}
+
+              /><MapViewDirections
+                origin={position}
+
+                destination={{ latitude: activeBounty.bounty.lat, longitude: activeBounty.bounty.lng }}
+                apikey="AIzaSyAPOOnlu8YXdWsyM3uUkz3tU7AeDWgoQqA"
+                strokeWidth={4}
+                strokeColor={"#fff"
+                }
+              /><Modal visible={true} style={{position:'absolute',bottom:0,backgroundColor:"white",width:"100%",padding:10,top: Dimensions.get("window").height - 200 }}>
+                <Button onPress={() => setShowActiveBountyCancel(true)} status="control" accessoryLeft={props => <Icon name="close-outline" style={{ width: 20, height: 20 }} {...props} />}>Cancel</Button>
+                <View style={{ marginVertical: 15, alignItems: 'center' }} >{activeBounty.started ? (calcCrow(position.latitude, position.longitude, bounty.lat, bounty.lng) < 0.3 ? <Button style={{ width: "100%" }} onPress={() => startWorking()}>Start Working!</Button> : <><Progress.Bar color="#E84C3D" progress={0.3} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width:300}}><Text style={{ color: "white" }}>First Step: Move to Bounty</Text></View></>) :!activeBounty.review?<><Progress.Bar color="#E84C3D" progress={1} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width:300}}><Text style={{ color: "white" }}>Final Step: Awaiting Approval</Text></View></>: <><Progress.Bar color="#E84C3D" progress={0.6} width={300} /><View style={{ margin: 5 }}><Button onPress={() => setShowSubmit(true)}>Second Step: Submit Work for Review</Button></View></>}</View>
+
+                </Modal>{/* swipe up for current bounty  */}
+  
+  <Modal visible={showSubmit} backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} onBackdropPress={() => setShowSubmit(false)}>{!showCamera ? <View style={{ width: 250 }}><Input value={text} onChange={e=>setText(e.target.value)} accessoryLeft={props => <Icon {...props} name="text-outline" />} placeholder="Optional Text.." />
+        {imagePreview ? <View style={{ height: 400, marginVertical: 10 }}><Button style={{ position: 'absolute', zIndex: 1, right: 0 }} status="control" accessoryLeft={props => <Icon name="close-square-outline" {...props} />} onPress={() => setImagePreview(null)}></Button><Image style={{ borderRadius: 10, flex: 1, }} source={{ uri: imagePreview }} /></View> : <Button onPress={checkCameraPermission} status="success" style={{ marginVertical: 10 }} accessoryLeft={props => <Icon {...props} name="camera-outline" />}>Optional: Take Picture</Button>}
+
+        <Button onPress={submitForReview}>Submit</Button></View> :
         <Camera ref={ref => {
           setCamera(ref);
         }} style={{ flex: 1, width: Dimensions.get('window').width - 80, height: Dimensions.get('window').height - 80 }} type={type}>
@@ -383,11 +432,39 @@ function BountyInfo({ position, activeBounty, setActiveBounty, createActiveBount
                   : Camera.Constants.Type.back
               );
             }}></Button>
-            
+
           </View>
         </Camera>
-      }</Modal>
-    </>
+      }</Modal></>)
+}
+function BountyInfo({ createActiveBounty, bounty, setBounty, findClosest }) {
+  const [modalHeight, setHeight] = useState(null)
+  
+
+  function findHeight(layout) {
+    const { x, y, width, height } = layout;
+    setHeight(height)
+  }
+
+  
+
+  return (
+      <Modal visible={true} style={{ width: '100%', position: 'absolute', top: Dimensions.get("window").height - modalHeight }} >
+        <Card style={{ height: modalHeight }} disabled={true} onLayout={(event) => { findHeight(event.nativeEvent.layout) }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <View>
+              <Text style={{ color: "darkgrey" }}>{bounty.type} Event</Text>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}><Text style={{ textDecorationLine: 'underline', textDecorationColor: "red", fontSize: 30 }}>{bounty.title}</Text><View style={{ borderRadius: 5, backgroundColor: "#9F3737", marginHorizontal: 5 }}><Text style={{ color: "white", padding: 3 }}>{bounty.numPeople == 1 ? "Individual" : bounty.numPeople + " people"}</Text></View></View>
+              <Text style={{ marginVertical: 5 }}>{bounty.amount} Bounty Credits</Text></View>
+            <Button onPress={() => setBounty(null)} status="control" accessoryLeft={props => <Icon name="close-outline" style={{ width: 20, height: 20 }} {...props} />}></Button>
+
+          </View>
+          <Text style={{ color: "grey" }}>{bounty.description}</Text>
+          <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}><Text>Started By: {bounty.user.username}</Text><ButtonGroup ><Button onPress={() => findClosest(true)} accessoryLeft={(props) => <Icon {...props} name="chevron-left-outline" />}></Button><Button onPress={() => findClosest(false)} accessoryLeft={(props) => <Icon {...props} name="chevron-right-outline" />}></Button></ButtonGroup>
+          </View><Button onPress={() => { createActiveBounty(bounty) }} style={{ marginVertical: 10 }} status="success">Start</Button> 
+        </Card>
+      </Modal>
+      
   )
 }
 function Timer({ marker }) {
