@@ -36,9 +36,45 @@ const Discover = ({ route }) => {
   const mapRef = useRef(null);
   const [activeBounty, setActiveBounty] = useState(null)
 
-  /* const [showActiveBounties, setShowActiveBounties] = useState(false)
-  const [showSuggestedRoute, setShowSuggestedRoute] = useState(false)  */
+  /*   
+      compute suggested route 
+    update my location button or live tracking
+      check in system and progress
+      make sure to show both route and both points calculation calculate longitude delta
+      add account type
+      You're moving at : plus 1 for cycling (encourage route)
+      if started working then fill up person limit realtime
+      when started working on bounty have animation fighting it
+      people map out pokestops
+      see direct impact of donations
+      different colors and custom map directions view
+      dayu plan out trip realtime wallet updating
+      on click bounty, update all or just one
+    leaderboard
+    
+    realize impact by green travel and bounties
+    analyze speed, only if using car
+    select current option, if following path and speed then +1
+    have multiple travel options displayed
+    plan day trip with times for lunch all laid out
+    view history, impact, etc
 
+      blockchain project
+      hackathons and hackerrank and kaggle
+
+      
+i like calling random people
+remember when 4th grade
+steph fine
+how yuo doing
+how ics
+its not like im hitting on u just u know 
+already called samantha, etc
+just bored 
+
+i just forgot where u went
+
+  */
   useEffect(() => {
     getBounties()
 
@@ -143,6 +179,7 @@ const Discover = ({ route }) => {
     })
   }
   const midpoint = ([x1, y1], [x2, y2]) => [(x1 + x2) / 2, (y1 + y2) / 2];
+  
   function calculateViewingBox(active, loc) {
     console.log(loc)
     console.log(active)
@@ -154,11 +191,11 @@ const Discover = ({ route }) => {
     let mid = midpoint([lat, lng], [loc.latitude, loc.longitude])
     let centerLat = mid[0]
     let centerLng = mid[1]
-    
+
     let latDelta = Math.abs(lat - loc.latitude)
     latDelta *= 7
     const lngDelta = latDelta * ASPECT_RATIO;
-    
+
 
     mapRef.current.animateToRegion({
       latitude: centerLat,
@@ -184,40 +221,41 @@ const Discover = ({ route }) => {
             latitude: 22.3193,
             longitude: 114.1694, latitudeDelta: 0.0922, longitudeDelta: 0.0421
           }} style={styles.map}>
-            {position && <Marker
-              coordinate={position}
-              title={"This is Me"}
-              description={"Fight the Fires!"}
-            />}
-            {
-              markers.map((marker, index) => (
-                <Marker
-                  key={index}
-                  coordinate={{ longitude: marker.lng, latitude: marker.lat }}
-                  title={marker.title}
-                  description={marker.description}
-                  onPress={() => { setCurLoc(marker) }}
-                >
-                  <View style={{ flexDirection: 'column', alignItems: 'center', marginRight: 13 }}>
-                    <Image
-                source={require('../images/bounty.png')}
-                style={{ width: 26, height: 28 }}
-                resizeMode="contain"
-                    />
-                    <Timer marker={marker} />
-                  </View>
-                  <Callout tooltip={true} />
-                </Marker>
-              ))
-            }
-        </MapView> 
-        
-        : <View style={{
+            <>
+              {position && <Marker
+
+                coordinate={position}
+                title={"This is Me"}
+                description={"Fight the Fires!"}
+
+              />}{
+                markers.map((marker, index) => (
+                  <Marker
+                    key={index}
+                    coordinate={{ longitude: marker.lng, latitude: marker.lat }}
+                    title={marker.title}
+                    description={marker.description}
+                    onPress={() => { setCurLoc(marker) }}
+
+                  >
+                    <View style={{ flexDirection: 'column', alignItems: 'center', marginRight: 13 }}>
+                      <Image
+                        source={require('../images/bounty.png')}
+                        style={{ width: 26, height: 28 }}
+                        resizeMode="contain"
+                      />
+                      <Timer marker={marker} />
+                    </View>
+                    <Callout tooltip={true} />
+                  </Marker>
+                ))}
+            </>
+        </MapView> : <View style={{
           alignItems:
             'center', padding: 20
         }}><Button status="control" onPress={() => setErrorMsg(null)} style={{ alignSelf: 'flex-start' }} accessoryLeft={props => <Icon {...props} name="chevron-left-outline" />}>Back</Button><Image source={require('../images/location.png')} style={{ width: 125, height: 125 }} resizeMode='contain' /><Text style={{ fontSize: 30 }}>OOPS!</Text><Text style={{ fontSize: 15 }}>Please turn on location services!</Text></View>
       }
-      {curLoc && position &&!activeBounty&& <BountyInfo createActiveBounty={createActiveBounty} bounty={curLoc} setBounty={setCurLoc} findClosest={findClosest} />
+      {curLoc && position && !activeBounty && <BountyInfo createActiveBounty={createActiveBounty} bounty={curLoc} setBounty={setCurLoc} findClosest={findClosest} />
       }
     </View>
   )
@@ -225,7 +263,7 @@ const Discover = ({ route }) => {
 
 function BountyInfo({ createActiveBounty, bounty, setBounty, findClosest }) {
   const [modalHeight, setHeight] = useState(275)
-  
+
 
   /* function findHeight(layout) {
     const { x, y, width, height } = layout;
@@ -233,25 +271,25 @@ function BountyInfo({ createActiveBounty, bounty, setBounty, findClosest }) {
   } 
   full Height modal if expand read more description*/
 
-  
+
 
   return (
-      <Modal visible={true} style={{ width: '100%', position: 'absolute', top: Dimensions.get("window").height - modalHeight }} >
-        <Card style={{ height: modalHeight }} disabled={true} /* onLayout={(event) => { findHeight(event.nativeEvent.layout) }} */>
-          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
-            <View>
-              <Text style={{ color: "darkgrey" }}>{bounty.type} Event</Text>
-              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}><Text style={{ textDecorationLine: 'underline', textDecorationColor: "red", fontSize: 30 }}>{bounty.title}</Text><View style={{ borderRadius: 5, backgroundColor: "#9F3737", marginHorizontal: 5 }}><Text style={{ color: "white", padding: 3 }}>{bounty.numPeople == 1 ? "Individual" : bounty.numPeople + " people"}</Text></View></View>
-              <Text style={{ marginVertical: 5 }}>{bounty.amount} Bounty Credits</Text></View>
-            <Button onPress={() => setBounty(null)} status="control" accessoryLeft={props => <Icon name="close-outline" style={{ width: 20, height: 20 }} {...props} />}></Button>
+    <Modal visible={true} style={{ width: '100%', position: 'absolute', top: Dimensions.get("window").height - modalHeight }} >
+      <Card style={{ height: modalHeight }} disabled={true} /* onLayout={(event) => { findHeight(event.nativeEvent.layout) }} */>
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <View>
+            <Text style={{ color: "darkgrey" }}>{bounty.type} Event</Text>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}><Text style={{ textDecorationLine: 'underline', textDecorationColor: "red", fontSize: 30 }}>{bounty.title}</Text><View style={{ borderRadius: 5, backgroundColor: "#9F3737", marginHorizontal: 5 }}><Text style={{ color: "white", padding: 3 }}>{bounty.numPeople == 1 ? "Individual" : bounty.numPeople + " people"}</Text></View></View>
+            <Text style={{ marginVertical: 5 }}>{bounty.amount} Bounty Credits</Text></View>
+          <Button onPress={() => setBounty(null)} status="control" accessoryLeft={props => <Icon name="close-outline" style={{ width: 20, height: 20 }} {...props} />}></Button>
 
-          </View>
-          <Text style={{ color: "grey" }}>{bounty.description}</Text>
-          <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}><Text>Started By: {bounty.user.username}</Text><ButtonGroup ><Button onPress={() => findClosest(true)} accessoryLeft={(props) => <Icon {...props} name="chevron-left-outline" />}></Button><Button onPress={() => findClosest(false)} accessoryLeft={(props) => <Icon {...props} name="chevron-right-outline" />}></Button></ButtonGroup>
-          </View><Button onPress={() => { createActiveBounty(bounty) }} style={{ marginVertical: 10 }} status="success">Start</Button> 
-        </Card>
-      </Modal>
-      
+        </View>
+        <Text style={{ color: "grey" }}>{bounty.description}</Text>
+        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}><Text>Started By: {bounty.user.username}</Text><ButtonGroup ><Button onPress={() => findClosest(true)} accessoryLeft={(props) => <Icon {...props} name="chevron-left-outline" />}></Button><Button onPress={() => findClosest(false)} accessoryLeft={(props) => <Icon {...props} name="chevron-right-outline" />}></Button></ButtonGroup>
+        </View><Button onPress={() => { createActiveBounty(bounty) }} style={{ marginVertical: 10 }} status="success">Start</Button>
+      </Card>
+    </Modal>
+
   )
 }
 

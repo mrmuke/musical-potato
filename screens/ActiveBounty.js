@@ -293,7 +293,7 @@ const ActiveBounty = ({route, navigation}) => {
       setActiveBounty({ ...activeBounty, review: true })
     })
   }
-  if(position == null){
+  if(position == null || activeBounty.bounty == undefined){
       return(<View><Text>Hello</Text></View>)
   } else {
     return (
