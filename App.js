@@ -6,7 +6,10 @@ import * as eva from '@eva-design/eva';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 
 // Import React and Component
-import React from 'react';
+import React, {useState, useEffect} from 'react';
+import * as Location from 'expo-location';
+import API_URL from './api/API_URL';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import Navigators from React Navigation
 import {NavigationContainer} from '@react-navigation/native';
@@ -18,6 +21,7 @@ import LoginScreen from './screens/Login';
 import RegisterScreen from './screens/Register';
 import Tabs from './screens/Tabs';
 import { default as theme } from './custom-theme.json'; // <-- Import app theme
+import ActiveBounty from './screens/ActiveBounty';
 
 const Stack = createStackNavigator();
 
@@ -49,6 +53,39 @@ const Auth = () => {
 };
 
 const App = () => {
+  
+  const [position, setPosition] = useState(null);
+  const [activeBounty, setActiveBounty] = useState(null);
+
+  useEffect(() => {
+    myLocation()
+  }, [])
+  async function getActiveBounty(loc) {
+    fetch(`${API_URL.api}/api/bounty/getActive`, {
+      headers: {
+        "Authorization": "Token " + await AsyncStorage.getItem('token')
+      },
+      credentials: "same-origin"
+    }).then(result => result.json()).then(result => {
+      if (!result.hasOwnProperty('msg')) {
+        console.log("ACTIVE BOUNTY!")
+        setActiveBounty(result);
+      }
+    })
+  }
+
+  async function myLocation() {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      setErrorMsg('Permission to access location was denied');
+    }
+    else {
+      let location = await Location.getCurrentPositionAsync({});
+      getActiveBounty(location.coords)
+      setPosition(location.coords)
+    }
+  }
+
   return ( <><IconRegistry icons={EvaIconsPack} />
     <ApplicationProvider {...eva} theme={{ ...eva.light, ...theme }}>
     <NavigationContainer>
@@ -70,8 +107,14 @@ const App = () => {
         <Stack.Screen
           name="Tabs"
           component={Tabs}
+          initialParams={{activeBounty}}
           // Hiding header for Navigation Drawer
           options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Active Bounty"
+          component={ActiveBounty}
+          options={{headerShown:false}}
         />
       </Stack.Navigator>
     </NavigationContainer></ApplicationProvider>
