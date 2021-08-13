@@ -2,13 +2,14 @@ import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import MapView, { Callout, Marker } from 'react-native-maps'
 import React, { useState, useRef, useEffect } from 'react';
 import * as Location from 'expo-location';
+
 import { Button, ButtonGroup, Card, Icon, Input, Modal, Spinner } from '@ui-kitten/components';
 import API_URL from '../api/API_URL';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapViewDirections from 'react-native-maps-directions';
 import * as Progress from 'react-native-progress';
 import { Camera } from 'expo-camera'
-import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 const mapStyle = require('../assets/mapStyle.json')
 function calcCrow(lat1, lon1, lat2, lon2) {
   var R = 6371; // km
@@ -58,22 +59,12 @@ const Discover = ({ route }) => {
     have multiple travel options displayed
     plan day trip with times for lunch all laid out
     view history, impact, etc
+  snap n reuse?
 
       blockchain project
       hackathons and hackerrank and kaggle
 
-      
-i like calling random people
-remember when 4th grade
-steph fine
-how yuo doing
-how ics
-its not like im hitting on u just u know 
-already called samantha, etc
-just bored 
-
-i just forgot where u went
-
+    move lal to main page redux and channels when accept
   */
   useEffect(() => {
     getBounties()
@@ -93,7 +84,17 @@ i just forgot where u went
     }).then(result => result.json()).then(result => {
       if (!result.hasOwnProperty('msg')) {
         setActiveBounty(result)
-        calculateViewingBox(result, loc)
+
+          mapRef.current.fitToCoordinates([{latitude:result.bounty.lat,longitude:result.bounty.lng},loc], {
+            edgePadding: {
+              right: 100,
+              bottom: 200,
+              left: 100,
+              top: 100
+            }
+          });
+        
+
       }
 
     })
@@ -104,11 +105,20 @@ i just forgot where u went
       setErrorMsg('Permission to access location was denied');
     }
     else {
-
-
       let location = await Location.getCurrentPositionAsync({});
       getActiveBounty(location.coords)
       setPosition(location.coords)
+      /* setPosition((await Location.watchPositionAsync(
+        {
+          enableHighAccuracy: false,
+          distanceInterval: 1,
+          timeInterval: 10000
+        },
+        error => console.log(error)
+      )).coords) */
+
+
+      
     }
     setGettingPosition(false)
 
@@ -173,7 +183,7 @@ i just forgot where u went
   }
   async function createActiveBounty(bounty) {
 
-    let data = { "bounty": bounty.id }
+    let data = { "bounty": bounty.id,"lat":position.longitude,"lng":position.latitude }
     fetch(`${API_URL.api}/api/bounty/createActive`, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -189,36 +199,18 @@ i just forgot where u went
       response = { ...response, bounty: curLoc }
       setActiveBounty(response)
       setCurLoc(null)
-      calculateViewingBox(response, position)
-
+      mapRef.current.fitToCoordinates([{latitude:response.bounty.lat,longitude:response.bounty.lng},loc], {
+        edgePadding: {
+          right: 100,
+          bottom: 200,
+          left: 100,
+          top: 100
+        }
+      });
 
     })
   }
-  const midpoint = ([x1, y1], [x2, y2]) => [(x1 + x2) / 2, (y1 + y2) / 2];
-  function calculateViewingBox(active, loc) {
-    console.log(loc)
-    console.log(active)
-    let lat = active.bounty.lat
-    let lng = active.bounty.lng
-
-    const { width, height } = Dimensions.get('window');
-    const ASPECT_RATIO = width / height;
-    let mid = midpoint([lat, lng], [loc.latitude, loc.longitude])
-    let centerLat = mid[0]
-    let centerLng = mid[1]
-
-    let latDelta = Math.abs(lat - loc.latitude)
-    latDelta *= 7
-    const lngDelta = latDelta * ASPECT_RATIO;
-
-
-    mapRef.current.animateToRegion({
-      latitude: centerLat,
-      longitude: centerLng,
-      latitudeDelta: latDelta,
-      longitudeDelta: lngDelta
-    })
-  }
+  
 
 
   return (
@@ -268,38 +260,14 @@ i just forgot where u went
 
               
 
-              {/*  <Modal visible={gettingPosition}  style={{ backgroundColor: "white", padding: 20, borderRadius: 15 }}><Spinner style={{ position: 'absolute' }} /></Modal> */}{/*
-          <Button accessoryLeft={props => <Icon name="checkmark-circle-outline" {...props} />} style={{ position: 'absolute', left: 5, top: 5 }} onPress={() => setShowActiveBounties(true)} ></Button>
-
-          <Modal visible={showActiveBounties} onBackdropPress={() => setShowActiveBounties(false)} backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <View style={{ backgroundColor: "#fff", padding: 10, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}><Text style={{ color: "black", fontSize: 19, fontWeight: "600" }}>Duration: {activeBounties.reduce((a, b) => +a + +b.bounty.duration, 0)} hours</Text></View>
-            {activeBounties.length ? <>{activeBounties.map(c => (
-              <TouchableOpacity key={c.id} onPress={() => { setShowActiveBounties(false); changeRegion(markers.findIndex(e => e.id == c.bounty.id), markers) }} style={styles.appButtonContainer}>
-                <Text style={styles.appButtonText}>{c.bounty.title}</Text>
-              </TouchableOpacity>
-            ))}
-              <Button onPress={() => { setShowSuggestedRoute(true); setShowActiveBounties(false) }} accessoryLeft={props => <Icon {...props} name="map-outline" />}><Text>Suggested Route</Text></Button>
-            </> : <View style={{ backgroundColor: "white", padding: 15, borderRadius: 10 }}><Text style={{ fontSize: 20 }}>No Active Bounties</Text></View>}
               
-          </Modal>
-          {showSuggestedRoute &&
-            <MapViewDirections
-              origin={position}
-              optimizeWaypoints={true}
-              destination={position}
-              waypoints={activeBounties.map(c => ({ latitude: c.bounty.lat, longitude: c.bounty.lng }))}
-              apikey="AIzaSyAPOOnlu8YXdWsyM3uUkz3tU7AeDWgoQqA"
-              strokeWidth={4}
-              strokeColor={"#3863ba"
-              }
-            />} */}
             </>}
         </MapView> : <View style={{
           alignItems:
             'center', padding: 20
         }}><Button status="control" onPress={() => setErrorMsg(null)} style={{ alignSelf: 'flex-start' }} accessoryLeft={props => <Icon {...props} name="chevron-left-outline" />}>Back</Button><Image source={require('../images/location.png')} style={{ width: 125, height: 125 }} resizeMode='contain' /><Text style={{ fontSize: 30 }}>OOPS!</Text><Text style={{ fontSize: 15 }}>Please turn on location services!</Text></View>
       }
-      <Button style={{ position: 'absolute', right: 5, top: 5 }} onPress={() => { moveToUser() }} accessoryLeft={props => <Icon name="navigation-2-outline" {...props} />}></Button>
+      <Button style={{ position: 'absolute', right: 5, top: 5 }} onPress={() => { if(position){moveToUser()} }} accessoryLeft={props => <Icon name="navigation-2-outline" {...props} />}></Button>
       {curLoc && position && !activeBounty && <BountyInfo createActiveBounty={createActiveBounty} bounty={curLoc} setBounty={setCurLoc} findClosest={findClosest} />
       }
     </View>
@@ -315,6 +283,8 @@ function ActiveBounty({ activeBounty, setActiveBounty, position }) {
   const [imagePreview, setImagePreview] = useState(null)
   const [imageData, setImageData] = useState(null)
   const [text, setText] = useState("")
+  const [transport,setTransport]=useState("DRIVING")
+  const [emissions,setEmissions]=useState(null)
   async function cancelActiveBounty() {
     fetch(`${API_URL.api}/api/bounty/cancelActive`, {
       method: 'DELETE',
@@ -384,14 +354,34 @@ function ActiveBounty({ activeBounty, setActiveBounty, position }) {
       setActiveBounty({ ...activeBounty, review: true })
     })
   }
-
+  async function getTransportEmissions(distance){
+    fetch(`${API_URL.api}/api/bounty/emissions?distance=${distance}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": "Token " + await AsyncStorage.getItem('token')
+      },
+      credentials: "same-origin"
+    }).then(response => response.json()).then(response => {
+      setEmissions(response)
+    })
+  }
+ let imgs={"DRIVING":require('../images/DRIVING.png'),
+ "BICYCLING":require('../images/BICYCLING.png'),
+ "TRANSIT":require('../images/TRANSIT.png'),
+ "WALKING":require('../images/WALKING.png')}
   return (
     <><Marker
-      coordinate={position}
+      coordinate={{latitude: activeBounty.lat, longitude: activeBounty.lng}}
       title={"This is Me"}
       description={"Go to the Bounty"}
-
-    />
+    ></Marker>
+    <Marker
+      coordinate={{latitude:position,longitude:position.longitude}}
+      title={"This is Me"}
+      description={"Go to the Bounty"}
+      
+    ><Image style={{width:40,height:40,tintColor:"#eee"}} source={imgs[transport]}></Image></Marker>
       <Modal backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} onBackdropPress={() => setShowActiveBountyCancel(false)} visible={showActiveBountyCancel}>
         <View style={{ backgroundColor: "white", padding: 20, borderRadius: 10 }}>
           <Text style={{ fontSize: 30, fontWeight: "500", textAlign: 'center' }}>
@@ -411,15 +401,35 @@ function ActiveBounty({ activeBounty, setActiveBounty, position }) {
 
       /><MapViewDirections
         origin={position}
+        mode={transport}
+        onReady={result => {
+          console.log(`Distance: ${result.distance} km`)
+          getTransportEmissions(result.distance)
+         
+        }}
+        onError={(errorMessage) => {
+          // console.log('GOT AN ERROR');
+        }}
 
         destination={{ latitude: activeBounty.bounty.lat, longitude: activeBounty.bounty.lng }}
         apikey="AIzaSyAPOOnlu8YXdWsyM3uUkz3tU7AeDWgoQqA"
         strokeWidth={4}
         strokeColor={"#fff"
         }
-      /><Modal visible={true} style={{ position: 'absolute', bottom: 0, backgroundColor: "white", width: "100%", padding: 10, top: Dimensions.get("window").height - 200 }}>
-        <Button onPress={() => setShowActiveBountyCancel(true)} status="control" accessoryLeft={props => <Icon name="close-outline" style={{ width: 20, height: 20 }} {...props} />}>Cancel</Button>
-        <View style={{ marginVertical: 15, alignItems: 'center' }} >{activeBounty.started ? (calcCrow(position.latitude, position.longitude, bounty.lat, bounty.lng) < 0.3 ? <Button style={{ width: "100%" }} onPress={() => startWorking()}>Start Working!</Button> : <><Progress.Bar color="#E84C3D" progress={0.3} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width: 300 }}><Text style={{ color: "white" }}>First Step: Move to Bounty</Text></View></>) : activeBounty.review ? <><Progress.Bar color="#E84C3D" progress={1} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width: 300 }}><Text style={{ color: "white" }}>Final Step: Awaiting Approval</Text></View></> : <><Progress.Bar color="#E84C3D" progress={0.6} width={300} /><View style={{ margin: 5 }}><Button onPress={() => setShowSubmit(true)}>Second Step: Submit Work for Review</Button></View></>}</View>
+      /><Modal visible={true} style={{ position: 'absolute', bottom: 0, backgroundColor: "white", width: "100%", padding: 10, top: Dimensions.get("window").height - 275 }}>
+        <View style={{top:-30,position:'absolute',right:20,borderWidth:4,borderColor:"#eee",borderRadius:10}}><Button onPress={() => setShowActiveBountyCancel(true)} status="warning" accessoryLeft={props => <Icon name="close-outline" style={{ width: 20, height: 20, }} {...props} />}></Button></View>
+        <View style={{ marginBottom: 15, alignItems: 'center',marginTop:30 }} >{!activeBounty.started ? (calcCrow(position.latitude, position.longitude, bounty.lat, bounty.lng) < 0.3 ? <Button style={{ width: "100%" }} onPress={() => startWorking()}>Start Working!</Button> : <><Progress.Bar color="#E84C3D" progress={0.3} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width: 300 }}><Text style={{ color: "white" }}>First Step: Move to Bounty</Text>
+        </View>
+        <View style={{display:"flex",flexDirection:"row",width:300}}>
+        <TouchableOpacity onPress={()=>setTransport("DRIVING")} style={transport=="DRIVING"?styles.activeTransit:styles.transitOption} ><Ionicons name="md-car" size={32} color="#E84C3D" /><Text >Car</Text></TouchableOpacity>
+        <TouchableOpacity onPress={()=>setTransport("BICYCLING")} style={transport=="BICYCLING"?styles.activeTransit:styles.transitOption} ><Ionicons name="md-bicycle" size={32} color="#E84C3D" /><Text>Bicycle</Text></TouchableOpacity>
+        <TouchableOpacity onPress={()=>setTransport("WALKING")} style={transport=="WALKING"?styles.activeTransit:styles.transitOption} ><Ionicons name="md-walk" size={32} color="#E84C3D" /><Text>Walk</Text></TouchableOpacity>
+        <TouchableOpacity onPress={()=>setTransport("TRANSIT")} style={transport=="TRANSIT"?styles.activeTransit:styles.transitOption} ><Ionicons name="md-train" size={32} color="#E84C3D" /><Text>Transit</Text></TouchableOpacity>
+        </View>
+        
+          {emissions&&(transport=="WALKING"||transport=="BICYCLING"?<Text style={{backgroundColor:"#199B6E",padding:10,marginTop:10,color:"white",width:300}}>{transport} is a great way to help save the environment. It is an entirely green travel solution that is healthy as well!</Text>:transport=="DRIVING"?<Text style={{backgroundColor:"#E84C3D",padding:10,marginTop:10,color:"white",width:300}}>Riding a car would take around {emissions["car-trees"]}% of a fully grown tree to offset your carbon emissions.</Text>:<Text style={{backgroundColor:"#f39c11",padding:10,marginTop:10,color:"white",width:300}}>Great job taking public transport. It will only take {emissions["transit-trees"]}% of a tree to offset your trip's carbon emission.</Text>)}
+
+        </>) : activeBounty.review ? <><Progress.Bar color="#E84C3D" progress={1} width={300} /><View style={{ borderRadius: 3, alignSelf: 'center', padding: 15, margin: 5, backgroundColor: "#E84C3D", width: 300 }}><Text style={{ color: "white" }}>Final Step: Awaiting Approval</Text></View></> : <><Progress.Bar color="#E84C3D" progress={0.6} width={300} /><View style={{ margin: 5 }}><Button onPress={() => setShowSubmit(true)}>Second Step: Submit Work for Review</Button></View></>}</View>
 
       </Modal>{/* swipe up for current bounty  */}
 
@@ -472,7 +482,7 @@ function BountyInfo({ createActiveBounty, bounty, setBounty, findClosest }) {
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <View>
             <Text style={{ color: "darkgrey" }}>{bounty.type} Event</Text>
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}><Text style={{ textDecorationLine: 'underline', textDecorationColor: "red", fontSize: 30 }}>{bounty.title}</Text><View style={{ borderRadius: 5, backgroundColor: "#9F3737", marginHorizontal: 5 }}><Text style={{ color: "white", padding: 3 }}>{bounty.numPeople == 1 ? "Individual" : bounty.numPeople + " people"}</Text></View></View>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}><Text style={{ textDecorationLine: 'underline', textDecorationColor: "#E84C3D", fontSize: 30 }}>{bounty.title}</Text><View style={{ borderRadius: 5, backgroundColor: "#9F3737", marginHorizontal: 5 }}><Text style={{ color: "white", padding: 3 }}>{bounty.numPeople == 1 ? "Individual" : bounty.numPeople + " people"}</Text></View></View>
             <Text style={{ marginVertical: 5 }}>{bounty.amount} Bounty Credits</Text></View>
           <Button onPress={() => setBounty(null)} status="control" accessoryLeft={props => <Icon name="close-outline" style={{ width: 20, height: 20 }} {...props} />}></Button>
 
@@ -507,7 +517,26 @@ const styles = StyleSheet.create({
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height
   },
-
+  transitOption:{
+    alignItems:'center',
+   flex:1,borderWidth:2,borderColor:"#E84C3D",borderRadius:5,margin:1,padding:5,
+   shadowColor: '#ccc',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 1,
+    backgroundColor:"white"
+  },
+  activeTransit:{
+    alignItems:'center',
+   flex:1,borderWidth:2,borderColor:"#E84C3D",borderRadius:5,margin:1,padding:5,
+   shadowColor: '#ccc',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 1,
+    backgroundColor:"#f5f5f5"
+  },
   appButtonContainer: {
     elevation: 8,
     backgroundColor: "#f19f53",
