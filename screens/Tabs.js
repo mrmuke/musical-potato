@@ -16,11 +16,11 @@ const CustomTabBarButton = ({children,onPress})=>(
   </TouchableOpacity>
 )
 function Tabs({ route, navigation }) {
-  if(route.params["activeBounty"] != null){
+  /*if(route.params["activeBounty"] != null){
     navigation.navigate('Active Bounty', {
       activeBounty: route.params
     })
-  }
+  }*/
 
   const [showNavigator, setShowNavigator] = useState(20);
 
