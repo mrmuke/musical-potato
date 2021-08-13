@@ -43,12 +43,15 @@ function days_between(date1, date2) {
 
 }
 
-export default Home = ({route}) => {
+export default Home = ({route, navigation}) => {
   const[data, setData] = useState([])
+  const[userBalance, setUserBalance] = useState(0);
   const[selected, setSelected] = useState(0);
   const[visible,setVisible] = useState(false);
   const[payVisible, setPayVisible] = useState(false);
+  const[confirmPayement, setConfirmPayment] = useState(false);
   const[donationAmount,setDonationAmount] = useState(0);
+
 
   async function getAllPosts(amount){
     let token = await AsyncStorage.getItem("token")
@@ -63,11 +66,35 @@ export default Home = ({route}) => {
 				"pages": amount
 			})
 		});
-    setData((await res.json())["data"]);
+    let getData = await res.json();
+    setData(getData["data"]);
+    setUserBalance(getData["balance"])
+  }
+
+  async function makeDonations(){
+    let token = await AsyncStorage.getItem("token")
+    let res = await fetch(`${API_URL.api}/api/wante/makeDonations`,{
+			method: "POST",
+			headers: {
+				Authorization: "Token " + token,
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+			},
+			body:JSON.stringify({
+				"donationID": data[selected].id,
+        "donationAmount": donationAmount
+			})
+		});
+    setDonationAmount(0);
+    getAllPosts(10);
   }
 
   useEffect(()=>{
-    getAllPosts(10);
+    const unsubscribe = navigation.addListener('focus', () => {
+      getAllPosts(10);
+    });
+
+    return unsubscribe;
   }, [])
 
   function getTheme(theme){
@@ -283,7 +310,7 @@ function ModalWhenWhere({navigation}){
               {obj.what}
               </Text>
               <View style={{backgroundColor:"#c2c2d6", width:"100%", height:20, marginTop: 20, marginBottom:10, borderRadius:10, overflow:"hidden"}}>
-                <View style={{backgroundColor:"#e84c3d", width:`${obj.collected/obj.bounty}%`, height:"100%"}}></View>
+                <View style={{backgroundColor:"#e84c3d", width:`${obj.collected/obj.bounty * 100}%`, height:"100%"}}></View>
               </View>
             </Card>)
             index++;
@@ -339,10 +366,11 @@ function ModalWhenWhere({navigation}){
                  <View style={{width:"100%", height:"100%", borderRadius:5, overflow:'hidden', backgroundColor:"white", display:"flex", alignItems:'center', justifyContent:"center"}}>
                   <NumericInput
                     value={donationAmount}
-                    onChange={value => setDonationAmount({value})}
+                    onChange={value => { setDonationAmount(value);}}
                     totalWidth={330} 
                     totalHeight={40}
                     minValue={0}
+                    maxValue={userBalance}
                     valueType='real'
                     step={5}
                     rounded
@@ -350,16 +378,73 @@ function ModalWhenWhere({navigation}){
                     rightButtonBackgroundColor='#E84C3D' 
                     leftButtonBackgroundColor='#E84C3D'/>
                     <View style={{width:330, display:"flex", flexDirection:"row", alignItems:"center", marginTop: 20, marginBottom:20}}>
-                      <Text style={{width:"50%", color:"#E84C3D", fontWeight:"bold", fontSize:18}}>My Wallet: </Text><Text style={{width:"50%", textAlign:"right"}}>2000</Text>
+                      <Text style={{width:"50%", color:"#E84C3D", fontWeight:"bold", fontSize:18}}>My Wallet: </Text><Text style={{width:"50%", textAlign:"right"}}>{userBalance}</Text>
                     </View>
                     <View style={{width:330, display:"flex", flexDirection:"row", alignItems:"center", marginBottom:20}}>
-                      <Text style={{width:"50%", color:"#E84C3D", fontWeight:"bold", fontSize:18}}>Current Payment: </Text><Text style={{width:"50%", textAlign:"right"}}><Text style={{fontWeight:"bold", fontSize:20}}>-</Text>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;200</Text>
+                      <Text style={{width:"50%", color:"#E84C3D", fontWeight:"bold", fontSize:18}}>Current Payment: </Text><Text style={{width:"50%", textAlign:"right"}}><Text style={{fontWeight:"bold", fontSize:20}}>-</Text>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{donationAmount}</Text>
                     </View>
                     <View style={{width:330, height:2, backgroundColor:"black", marginBottom: 20}}></View>
                     <View style={{width:330, display:"flex", flexDirection:"row", alignItems:"center", marginBottom:20}}>
-                      <Text style={{width:"50%", color:"#E84C3D", fontWeight:"bold", fontSize:18}}>Remaining: </Text><Text style={{width:"50%", textAlign:"right"}}>1800</Text>
+                      <Text style={{width:"50%", color:"#E84C3D", fontWeight:"bold", fontSize:18}}>Remaining: </Text><Text style={{width:"50%", textAlign:"right"}}>{userBalance - donationAmount}</Text>
                     </View>
-                    <Button style={{width:330, height:40, borderRadius:10}}>Pay now!</Button>
+                    {
+                      (function(){
+                        if(donationAmount == 0){
+                          return(<Button style={{width:330, height:40, borderRadius:10}}
+                          onPress={
+                            ()=>{
+                              setPayVisible(false);
+                              setConfirmPayment(true);
+                            }
+                          }
+                          disabled
+                          >Pay now!</Button>)
+                        } else {
+                          return(<Button style={{width:330, height:40, borderRadius:10}}
+                          onPress={
+                            ()=>{
+                              setPayVisible(false);
+                              setConfirmPayment(true);
+                            }
+                          }
+                          >Pay now!</Button>)
+                        }
+                      })()
+                    }
+                 </View>
+              </Modal>
+            )
+          }
+        })()
+      }
+      {
+        (function(){
+          if(data.length > 0){
+            return(
+              <Modal visible={confirmPayement}
+               backdropStyle={styles.backdrop}
+               style={{width:"90%", height:"38%"}}
+               onBackdropPress={() => {setConfirmPayment(false);}}>
+                 <View style={{width:"100%", height:"100%", borderRadius:5, overflow:'hidden', backgroundColor:"white", display:"flex", alignItems:'center', justifyContent:"center"}}>
+                  <Text style={{color:"#E84C3D", fontWeight:"bold", fontSize:18, width: "80%", textAlign:"center"}}>Are you sure you want to donate {donationAmount}?</Text>
+                  <View style={{flexDirection:"row", marginTop:45}}>
+                    <Button style={{width:"35%", marginRight:"10%"}} appearance="outline"
+                    onPress={
+                      ()=>{
+                        makeDonations();
+                        setConfirmPayment(false);
+                      }
+                    }
+                    >Yes</Button>
+                    <Button style={{width:"35%"}} appearance="outline"
+                    onPress={
+                      ()=>{
+                        setConfirmPayment(false);
+                        setPayVisible(true);
+                      }
+                    }
+                    >No</Button>
+                  </View>
                  </View>
               </Modal>
             )

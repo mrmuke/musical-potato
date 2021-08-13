@@ -245,7 +245,7 @@ const WantePage = ({route}) => {
   async function getDonations(){
     let token = await AsyncStorage.getItem("token");
     console.log(token)
-    fetch(`${API_URL.api}/api/wante/create`, {
+    await fetch(`${API_URL.api}/api/wante/create`, {
       method: 'POST',
       headers: {
         Authorization: "Token " + token,
@@ -264,6 +264,12 @@ const WantePage = ({route}) => {
         "theme": themes[selectedIndex.row]
       }),
     })
+    setTitle("");
+    amount(0);
+    setWho("")
+    setWhat("")
+    setWhere("")
+    setWhy("")
   }
 
   return (
