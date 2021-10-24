@@ -51,6 +51,7 @@ export default Home = ({route, navigation}) => {
   const[payVisible, setPayVisible] = useState(false);
   const[confirmPayement, setConfirmPayment] = useState(false);
   const[donationAmount,setDonationAmount] = useState(0);
+  const[modalPage, setModalPage] = useState(0);
 
 
   async function getAllPosts(amount){
@@ -146,17 +147,16 @@ export default Home = ({route, navigation}) => {
     </View>
   );
   
-function ModalHome({navigation}){
-  if(visible == false){
-    navigation.navigate("1");
-  }
+function ModalHome(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center"}}>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, left:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("5")} accessoryLeft={backIcon}></Button>
-      </View>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
       <View style={{width:"20%", height:"100%", position:"absolute", top:0, right:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("2")} accessoryLeft={forwardIcon}></Button>
+        <Button appearance="ghost" onPress={()=>{
+          setModalPage(modalPage+1);
+          if(modalPage > 4){
+            setModalPage(0);
+          }
+        }} accessoryLeft={forwardIcon} style={{width:"100%"}}></Button>
       </View>
       <Text category="h3" style={{width:"100%", textAlign:"center"}}>{data[selected].name}</Text>
       <Text category="s1" style={{marginRight:"43%"}}>{userIcon()}{data[selected].user}</Text>
@@ -179,17 +179,24 @@ function ModalHome({navigation}){
   )
 }
 
-function ModalWhat({navigation}){
-  if(visible == false){
-    navigation.navigate("1");
-  }
+function ModalWhat(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center"}}>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
       <View style={{width:"20%", height:"100%", position:"absolute", top:0, left:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("2")} accessoryLeft={backIcon}></Button>
+        <Button appearance="ghost" onPress={()=>{
+          setModalPage(modalPage-1);
+          if(modalPage < 0){
+            setModalPage(4);
+          }
+        }} accessoryLeft={backIcon} style={{width:"100%"}}></Button>
       </View>
       <View style={{width:"20%", height:"100%", position:"absolute", top:0, right:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("4")} accessoryLeft={forwardIcon}></Button>
+        <Button appearance="ghost" onPress={()=>{
+          setModalPage(modalPage+1);
+          if(modalPage > 4){
+            setModalPage(0);
+          }
+        }} accessoryLeft={forwardIcon} style={{width:"100%"}}></Button>
       </View>
       <Text category="h3" style={{width:"100%", textAlign:"center"}}>What is it for?</Text>
       <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].what}</Text>
@@ -201,23 +208,35 @@ function ModalWhat({navigation}){
           <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
           <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
         </View>
-        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}>Donate Now!</Button>
-      </View>
+        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
+      onPress={()=>{
+        setVisible(false);
+        setPayVisible(true);
+      }}>
+        Donate Now!
+      </Button></View>
     </View>
   )
 }
 
-function ModalWho({navigation}){
-  if(visible == false){
-    navigation.navigate("1");
-  }
+function ModalWho(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center"}}>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
       <View style={{width:"20%", height:"100%", position:"absolute", top:0, left:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("1")} accessoryLeft={backIcon}></Button>
+        <Button appearance="ghost" onPress={()=>{
+          setModalPage(modalPage-1);
+          if(modalPage < 0){
+            setModalPage(4);
+          }
+        }} accessoryLeft={backIcon} style={{width:"100%"}}></Button>
       </View>
       <View style={{width:"20%", height:"100%", position:"absolute", top:0, right:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("3")} accessoryLeft={forwardIcon}></Button>
+        <Button appearance="ghost" onPress={()=>{
+          setModalPage(modalPage+1);
+          if(modalPage > 4){
+            setModalPage(0);
+          }
+        }} accessoryLeft={forwardIcon} style={{width:"100%"}}></Button>
       </View>
       <Text category="h3" style={{width:"100%", textAlign:"center"}}>Who are we?</Text>
       <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].who}</Text>
@@ -229,23 +248,35 @@ function ModalWho({navigation}){
           <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
           <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
         </View>
-        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}>Donate Now!</Button>
-      </View>
+        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
+      onPress={()=>{
+        setVisible(false);
+        setPayVisible(true);
+      }}>
+        Donate Now!
+      </Button></View>
     </View>
   )
 }
 
-function ModalWhy({navigation}){
-  if(visible == false){
-    navigation.navigate("1");
-  }
+function ModalWhy(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center"}}>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
       <View style={{width:"20%", height:"100%", position:"absolute", top:0, left:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("3")} accessoryLeft={backIcon}></Button>
+        <Button appearance="ghost" onPress={()=>{
+          setModalPage(modalPage-1);
+          if(modalPage < 0){
+            setModalPage(4);
+          }
+        }} accessoryLeft={backIcon} style={{width:"100%"}}></Button>
       </View>
       <View style={{width:"20%", height:"100%", position:"absolute", top:0, right:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("5")} accessoryLeft={forwardIcon}></Button>
+        <Button appearance="ghost" onPress={()=>{
+          setModalPage(modalPage+1);
+          if(modalPage > 4){
+            setModalPage(0);
+          }
+        }} accessoryLeft={forwardIcon} style={{width:"100%"}}></Button>
       </View>
       <Text category="h3" style={{width:"100%", textAlign:"center"}}>Why do this?</Text>
       <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].why}</Text>
@@ -257,23 +288,27 @@ function ModalWhy({navigation}){
           <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25, marginRight: 10}}></View>
           <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
         </View>
-        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}>Donate Now!</Button>
-      </View>
+        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
+      onPress={()=>{
+        setVisible(false);
+        setPayVisible(true);
+      }}>
+        Donate Now!
+      </Button></View>
     </View>
   )
 }
 
-function ModalWhenWhere({navigation}){
-  if(visible == false){
-    navigation.navigate("1");
-  }
+function ModalWhenWhere(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center"}}>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
       <View style={{width:"20%", height:"100%", position:"absolute", top:0, left:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("4")} accessoryLeft={backIcon}></Button>
-      </View>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, right:0, display: 'flex', justifyContent:"center"}}>
-        <Button appearance="ghost" onPress={()=>navigation.navigate("1")} accessoryLeft={forwardIcon}></Button>
+        <Button appearance="ghost" onPress={()=>{
+          setModalPage(modalPage-1);
+          if(modalPage < 0){
+            setModalPage(4);
+          }
+        }} accessoryLeft={backIcon} style={{width:"100%"}}></Button>
       </View>
       <Text category="h3" style={{width:"100%", textAlign:"center"}}>Where is it?</Text>
       <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].where}</Text>
@@ -285,8 +320,13 @@ function ModalWhenWhere({navigation}){
           <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
           <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25}}></View>
         </View>
-        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}>Donate Now!</Button>
-      </View>
+        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
+      onPress={()=>{
+        setVisible(false);
+        setPayVisible(true);
+      }}>
+        Donate Now!
+      </Button></View>
     </View>
   )
 }
@@ -338,17 +378,27 @@ function ModalWhenWhere({navigation}){
               <Modal visible={visible}
                backdropStyle={styles.backdrop}
                style={{width:"90%", height:"55%"}}
-               onBackdropPress={() => setVisible(false)}>
+               onBackdropPress={() =>{setVisible(false); setModalPage(0);}}>
                  <View style={{width:"100%", height:"100%", borderRadius:5, overflow:'hidden'}}>
-                  <NavigationContainer>
-                    <Stack.Navigator screenOptions={{headerShown:false}}>
-                        <Stack.Screen name="1" component={ModalHome}/>
-                        <Stack.Screen name="2" component={ModalWho}/>
-                        <Stack.Screen name="3" component={ModalWhat}/>
-                        <Stack.Screen name="4" component={ModalWhy}/>
-                        <Stack.Screen name="5" component={ModalWhenWhere}/>
-                      </Stack.Navigator>
-                  </NavigationContainer>
+                    {//3 What 5 Where 2 Who 4 Why
+                      (function(){
+                        if(modalPage == 0){
+                          return (<ModalHome></ModalHome>)
+                        }
+                        if(modalPage == 1){
+                          return (<ModalWho></ModalWho>)
+                        }
+                        if(modalPage == 2){
+                          return (<ModalWhat></ModalWhat>)
+                        }
+                        if(modalPage == 3){
+                          return (<ModalWhy></ModalWhy>)
+                        }
+                        if(modalPage == 4){
+                          return (<ModalWhenWhere></ModalWhenWhere>)
+                        }
+                      })()
+                    }
                  </View>
               </Modal>
             )
@@ -362,7 +412,7 @@ function ModalWhenWhere({navigation}){
               <Modal visible={payVisible}
                backdropStyle={styles.backdrop}
                style={{width:"90%", height:"38%"}}
-               onBackdropPress={() => {setPayVisible(false); setDonationAmount(0)}}>
+               onBackdropPress={() => {setPayVisible(false); setDonationAmount(0); setModalPage(0);}}>
                  <View style={{width:"100%", height:"100%", borderRadius:5, overflow:'hidden', backgroundColor:"white", display:"flex", alignItems:'center', justifyContent:"center"}}>
                   <NumericInput
                     value={donationAmount}
@@ -424,7 +474,7 @@ function ModalWhenWhere({navigation}){
               <Modal visible={confirmPayement}
                backdropStyle={styles.backdrop}
                style={{width:"90%", height:"38%"}}
-               onBackdropPress={() => {setConfirmPayment(false);}}>
+               onBackdropPress={() => {setConfirmPayment(false); setModalPage(0);}}>
                  <View style={{width:"100%", height:"100%", borderRadius:5, overflow:'hidden', backgroundColor:"white", display:"flex", alignItems:'center', justifyContent:"center"}}>
                   <Text style={{color:"#E84C3D", fontWeight:"bold", fontSize:18, width: "80%", textAlign:"center"}}>Are you sure you want to donate {donationAmount}?</Text>
                   <View style={{flexDirection:"row", marginTop:45}}>
