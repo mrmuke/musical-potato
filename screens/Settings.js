@@ -1,9 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React from 'react';
+import React, { useState } from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import API_URL from '../api/API_URL';
 import { Divider, Toggle, Text } from '@ui-kitten/components';
+import Profile from './Profile';
+
 const Settings = ({ navigation }) => {
+  const [page, setPage] = useState("home");
+
   function signOut() {
     fetch(`${API_URL.api}/api/users/logout`, { method: 'POST', headers: { "Authorization": "Token " + AsyncStorage.getItem('token') }, credentials: "same-origin" })
       .then(() => {
@@ -11,45 +15,53 @@ const Settings = ({ navigation }) => {
         navigation.replace('Auth');
       })
   }
-  return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: 'white', paddingTop: 20
-      }}>
-      <View><Text style={{ textAlign: 'center', fontWeight: "700", fontSize: 30, paddingBottom: 20 }}>Settings</Text></View><Divider style={{ marginBottom: 10 }} />
 
-      <Setting
-        style={styles.setting}
-        hint='Edit Profile'
-      />
-      <Setting
-        style={styles.setting}
-        hint='Change Password'
-      />
-      <Setting
-        style={styles.setting}
-        hint='Notifications'
-      />
-      <Setting
-        style={styles.setting}
-        hint='Privacy'
-      />
-      <Setting
-        style={styles.setting}
-        hint='Sound Enabled'
-      >
-        <Toggle
+  if(page == "home"){
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: 'white', paddingTop: 20
+        }}>
+        <View><Text style={{ textAlign: 'center', fontWeight: "700", fontSize: 30, paddingBottom: 20 }}>Settings</Text></View><Divider style={{ marginBottom: 10 }} />
 
+        <Setting
+          style={styles.setting}
+          hint='Edit Profile'
+          onPress={()=>{
+            setPage("profile");
+          }}
         />
-      </Setting>
-      <Setting
-        style={styles.setting}
-        hint='Sign Out'
-        onPress={signOut}
-      />
-    </View>
-  )
+        <Setting
+          style={styles.setting}
+          hint='Change Password'
+        />
+        <Setting
+          style={styles.setting}
+          hint='Notifications'
+        />
+        <Setting
+          style={styles.setting}
+          hint='Privacy'
+        />
+        <Setting
+          style={styles.setting}
+          hint='Sound Enabled'
+        >
+          <Toggle
+
+          />
+        </Setting>
+        <Setting
+          style={styles.setting}
+          hint='Sign Out'
+          onPress={signOut}
+        />
+      </View>
+    )
+  } else if(page == "profile"){
+    return (<Profile></Profile>);
+  }
 }
 
 const Setting = (props) => {
