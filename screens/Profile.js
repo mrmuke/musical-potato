@@ -2,8 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, View, StyleSheet, ScrollView, Dimensions, Image } from 'react-native';
 import API_URL from '../api/API_URL';
-import { Divider, Toggle, Text, Input, Button } from '@ui-kitten/components';
+import { Divider, Toggle, Text, Input, Button, Modal } from '@ui-kitten/components';
 import Icon from "react-native-vector-icons/MaterialCommunityIcons"
+import { PieChart } from 'react-native-chart-kit'
 
 const height = Dimensions.get("screen").height;
 const width = Dimensions.get("screen").width;
@@ -13,11 +14,46 @@ const Profile = () => {
         "username":"loading...",
         "email":"loading...",
         "profile":{
-            "balance":"loading...",
-            "bio":"loading..."
+            "balance": 0,
+            "bio":"loading...",
+            "json":`{
+                "loading": 0
+            }`
         },
     });
     const [userBio, setUserBio] = useState("");
+    const [visible, setVisible] = useState(false);
+    const [newUsername, setNewUsername] = useState("");
+
+    const chartConfig = {
+        backgroundGradientFrom: '#1E2923',
+        backgroundGradientTo: '#08130D',
+        color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`
+    }
+
+    const pieChartColor = [
+        "#e2cf56",
+        "#aee256",
+        "#68e156",
+        "#56e189",
+        "#56e2cf",
+        "#56aee2",
+        "#5668e2",
+        "#5668e2",
+        "#cf56e2",
+        "#e256ae",
+        "#e28956",
+        "#e2cf56"
+    ]
+
+    const pieData = [
+        { name: 'Seoul', population: 21500000, color: pieChartColor[0], legendFontColor: 'white', legendFontSize: 15 },
+        { name: 'Toronto', population: 2800000, color: pieChartColor[1], legendFontColor: 'white',legendFontSize: 15 },
+        { name: 'Beijing', population: 527612, color: pieChartColor[2], legendFontColor: 'white',legendFontSize: 15 },
+        { name: 'New York', population: 8538000, color: pieChartColor[3], legendFontColor: 'white', legendFontSize: 15 },
+        { name: 'Moscow', population: 11920000, color: pieChartColor[4], legendFontColor: 'white', legendFontSize: 15 }
+    ];
+      
     
     async function getUserData(){
         let token = await AsyncStorage.getItem("token");
@@ -32,6 +68,14 @@ const Profile = () => {
         let data = await res.json();
         setUserData(data);
         setUserBio(data.profile.bio);
+    }
+
+    async function changeUsername(){
+        let token = await AsyncStorage.getItem("token");
+    }
+
+    async function changeBio(){
+        let token = await AsyncStorage.getItem("token");
     }
 
     useEffect(()=>{
@@ -55,7 +99,7 @@ const Profile = () => {
                         <Text style={{fontSize: width * 0.08, fontWeight:"bold"}}>
                             {userData.username}
                         </Text>
-                        <TouchableOpacity style={{marginLeft:10}}><Icon name="pencil-outline" style={{fontSize:width*0.07, color:"#E84C3D"}}/></TouchableOpacity>
+                        <TouchableOpacity style={{marginLeft:10}}><Icon name="pencil-outline" style={{fontSize:width*0.07, color:"#E84C3D"}} onPress={()=>{setVisible(true);}}/></TouchableOpacity>
                     </View>
                     {/* email */}
                     <Text style={{fontSize: width * 0.04,}}>{userData.email}</Text>
@@ -75,7 +119,16 @@ const Profile = () => {
                             <Text style={{fontSize: width * 0.03}}>Bounties</Text>
                         </View>
                         <View style={{width:(width-40)/4, justifyContent:"center", alignItems:"center"}}>
-                            <Text style={{fontSize: width * 0.05, fontWeight:"bold", color:"#000099"}}>3920</Text>
+                            <Text style={{fontSize: width * 0.05, fontWeight:"bold", color:"#000099"}}>{
+                                (()=>{
+                                    let data = (JSON.parse(userData.profile.json.replace(/'/g, '"') ));
+                                    var total = 0;
+                                    for(var i in data){
+                                        total += data[i];
+                                    }
+                                    return total;
+                                })()
+                            }</Text>
                             <Text style={{fontSize: width * 0.03}}>Donations</Text>
                         </View>
                     </View>
@@ -92,21 +145,60 @@ const Profile = () => {
                         {
                             (()=>{
                                 if(userBio != userData.profile.bio){
-                                    return(<Button style={{width: width * 0.9, borderColor:"white", borderRadius:15, marginTop: 10}}>Save!</Button>);
+                                    return(<Button style={{width: width * 0.9, borderColor:"white", borderRadius:15, marginTop: 10}} onPress={()=>changeBio}>Save!</Button>);
                                 }
+                            })()
+                        }
+                        <Text style={{marginTop: 30, color:"white", fontSize: width*0.05, marginBottom: 20, fontWeight:"bold"}}>Your Donation Profile</Text>
+                        {
+                            (()=>{
+                                if(userData.profile.json == null){
+                                    return;
+                                }
+                                let pieData = [];
+                                let data = (JSON.parse(userData.profile.json.replace(/'/g, '"') ));
+                                let colorCount = 0;
+                                for(var i in data){
+                                    pieData.push({ name: i, population: data[i], color: pieChartColor[colorCount], legendFontColor: 'white', legendFontSize: 15 });
+                                    colorCount++;
+                                }
+                                return(<PieChart
+                                    data={pieData}
+                                    width={width * 0.8}
+                                    height={width * 0.5}
+                                    chartConfig={chartConfig}
+                                    accessor="population"
+                                    backgroundColor="transparent"
+                                />)
                             })()
                         }
                     </View>
                 </View>
             </ScrollView>
-
+            <Modal visible={visible}
+               backdropStyle={styles.backdrop}
+               style={{width:"90%", height:"40%"}}
+               onBackdropPress={() =>{setVisible(false); setNewUsername("")}}>
+                 <View style={{width:"100%", height:"100%", borderRadius:5, overflow:'hidden', backgroundColor:"white", justifyContent:"center", alignItems:"center"}}>
+                     <Text style={{fontSize:width*0.05, marginBottom: 10}}>Change Username:</Text>
+                    <Input
+                        size='large'
+                        placeholder='Username...'
+                        style={{width: "80%", backgroundColor:"white", borderRadius:15}}
+                        value={newUsername}
+                        onChangeText={(text)=>{
+                            setNewUsername(text);
+                        }}
+                    />
+                    <Button style={{width: "80%", borderColor:"white", borderRadius:15, marginTop: 10}} onPress={()=>changeUsername}>Save!</Button>
+                 </View>
+              </Modal>
         </View>
     )
 }
 
 
 const styles = StyleSheet.create({
-
   setting: {
     padding: 16,
   },
@@ -114,6 +206,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  backdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width:"100%"
   },
 });
 
