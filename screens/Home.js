@@ -149,8 +149,29 @@ export default Home = ({route, navigation}) => {
   
 function ModalHome(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, right:0, display: 'flex', justifyContent:"center"}}>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white", flexDirection:"row"}}>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
+      </View>
+      <View style={{width:"60%", justifyContent:"center", alignItems:"center"}}>
+        <Text category="h3" style={{width:"100%", textAlign:"center"}}>{data[selected].name}</Text>
+        <Text category="s1" style={{marginRight:"43%"}}>{userIcon()}{data[selected].user}</Text>
+        <Image source={{uri:`${API_URL.api}${data[selected].image}`}} style={{width:"100%", height:undefined, aspectRatio:1, marginTop:20, borderRadius: 10}}/>
+        <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
+          <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25, marginRight: 10}}></View>
+          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
+        </View>
+        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
+        onPress={()=>{
+          setVisible(false);
+          setPayVisible(true);
+        }}>
+          Donate Now!
+        </Button>
+      </View>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
         <Button appearance="ghost" onPress={()=>{
           setModalPage(modalPage+1);
           if(modalPage > 4){
@@ -158,39 +179,41 @@ function ModalHome(){
           }
         }} accessoryLeft={forwardIcon} style={{width:"100%"}}></Button>
       </View>
-      <Text category="h3" style={{width:"100%", textAlign:"center"}}>{data[selected].name}</Text>
-      <Text category="s1" style={{marginRight:"43%"}}>{userIcon()}{data[selected].user}</Text>
-      <Image source={{uri:`${API_URL.api}${data[selected].image}`}} style={{width:"60%", height:undefined, aspectRatio:1, marginTop:20, borderRadius: 10}}/>
-      <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
-        <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25, marginRight: 10}}></View>
-        <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-        <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-        <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-        <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
-      </View>
-      <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
-      onPress={()=>{
-        setVisible(false);
-        setPayVisible(true);
-      }}>
-        Donate Now!
-      </Button>
     </View>
   )
 }
 
 function ModalWhat(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, left:0, display: 'flex', justifyContent:"center"}}>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white", flexDirection:"row"}}>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
         <Button appearance="ghost" onPress={()=>{
-          setModalPage(modalPage-1);
-          if(modalPage < 0){
-            setModalPage(4);
-          }
+            setModalPage(modalPage-1);
+            if(modalPage < 0){
+              setModalPage(4);
+            }
         }} accessoryLeft={backIcon} style={{width:"100%"}}></Button>
       </View>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, right:0, display: 'flex', justifyContent:"center"}}>
+      <View style={{width:"60%", justifyContent:"center", alignItems:"center", height:"100%"}}>
+        <Text category="h3" style={{width:"100%", textAlign:"center"}}>What is it for?</Text>
+        <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].what}</Text>
+        <View style={{position:"absolute", width:"100%", bottom: 40, display:"flex", justifyContent:"center", alignItems:"center"}}>
+          <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
+          </View>
+          <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
+        onPress={()=>{
+          setVisible(false);
+          setPayVisible(true);
+        }}>
+          Donate Now!
+        </Button></View>
+      </View>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
         <Button appearance="ghost" onPress={()=>{
           setModalPage(modalPage+1);
           if(modalPage > 4){
@@ -198,39 +221,42 @@ function ModalWhat(){
           }
         }} accessoryLeft={forwardIcon} style={{width:"100%"}}></Button>
       </View>
-      <Text category="h3" style={{width:"100%", textAlign:"center"}}>What is it for?</Text>
-      <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].what}</Text>
-      <View style={{position:"absolute", width:"100%", bottom: 40, display:"flex", justifyContent:"center", alignItems:"center"}}>
-        <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
-        </View>
-        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
-      onPress={()=>{
-        setVisible(false);
-        setPayVisible(true);
-      }}>
-        Donate Now!
-      </Button></View>
     </View>
   )
 }
 
 function ModalWho(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, left:0, display: 'flex', justifyContent:"center"}}>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white", flexDirection:"row"}}>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
         <Button appearance="ghost" onPress={()=>{
-          setModalPage(modalPage-1);
-          if(modalPage < 0){
-            setModalPage(4);
-          }
+            setModalPage(modalPage-1);
+            if(modalPage < 0){
+              setModalPage(4);
+            }
         }} accessoryLeft={backIcon} style={{width:"100%"}}></Button>
       </View>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, right:0, display: 'flex', justifyContent:"center"}}>
+      <View style={{width:"60%", justifyContent:"center", alignItems:"center", height:"100%"}}>
+        <Text category="h3" style={{width:"100%", textAlign:"center"}}>Who are we?</Text>
+        <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].who}</Text>
+        <View style={{position:"absolute", width:"100%", bottom: 40, display:"flex", justifyContent:"center", alignItems:"center"}}>
+          <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
+          </View>
+          <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
+            onPress={()=>{
+              setVisible(false);
+              setPayVisible(true);
+            }}>
+              Donate Now!
+          </Button>
+        </View>
+      </View>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
         <Button appearance="ghost" onPress={()=>{
           setModalPage(modalPage+1);
           if(modalPage > 4){
@@ -238,39 +264,41 @@ function ModalWho(){
           }
         }} accessoryLeft={forwardIcon} style={{width:"100%"}}></Button>
       </View>
-      <Text category="h3" style={{width:"100%", textAlign:"center"}}>Who are we?</Text>
-      <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].who}</Text>
-      <View style={{position:"absolute", width:"100%", bottom: 40, display:"flex", justifyContent:"center", alignItems:"center"}}>
-        <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
-        </View>
-        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
-      onPress={()=>{
-        setVisible(false);
-        setPayVisible(true);
-      }}>
-        Donate Now!
-      </Button></View>
     </View>
   )
 }
 
 function ModalWhy(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, left:0, display: 'flex', justifyContent:"center"}}>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white", flexDirection:"row"}}>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
         <Button appearance="ghost" onPress={()=>{
-          setModalPage(modalPage-1);
-          if(modalPage < 0){
-            setModalPage(4);
-          }
+            setModalPage(modalPage-1);
+            if(modalPage < 0){
+              setModalPage(4);
+            }
         }} accessoryLeft={backIcon} style={{width:"100%"}}></Button>
       </View>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, right:0, display: 'flex', justifyContent:"center"}}>
+      <View style={{width:"60%", justifyContent:"center", alignItems:"center", height:"100%"}}>
+        <Text category="h3" style={{width:"100%", textAlign:"center"}}>Why do this?</Text>
+        <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].why}</Text>
+        <View style={{position:"absolute", width:"100%", bottom: 40, display:"flex", justifyContent:"center", alignItems:"center"}}>
+          <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
+          </View>
+          <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
+        onPress={()=>{
+          setVisible(false);
+          setPayVisible(true);
+        }}>
+          Donate Now!
+        </Button></View>
+      </View>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
         <Button appearance="ghost" onPress={()=>{
           setModalPage(modalPage+1);
           if(modalPage > 4){
@@ -278,55 +306,48 @@ function ModalWhy(){
           }
         }} accessoryLeft={forwardIcon} style={{width:"100%"}}></Button>
       </View>
-      <Text category="h3" style={{width:"100%", textAlign:"center"}}>Why do this?</Text>
-      <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].why}</Text>
-      <View style={{position:"absolute", width:"100%", bottom: 40, display:"flex", justifyContent:"center", alignItems:"center"}}>
-        <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25}}></View>
-        </View>
-        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
-      onPress={()=>{
-        setVisible(false);
-        setPayVisible(true);
-      }}>
-        Donate Now!
-      </Button></View>
     </View>
   )
 }
 
 function ModalWhenWhere(){
   return(
-    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white"}}>
-      <View style={{width:"20%", height:"100%", position:"absolute", top:0, left:0, display: 'flex', justifyContent:"center"}}>
+    <View style={{width:"100%", height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"white", flexDirection:"row"}}>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
         <Button appearance="ghost" onPress={()=>{
-          setModalPage(modalPage-1);
-          if(modalPage < 0){
-            setModalPage(4);
-          }
+            setModalPage(modalPage-1);
+            if(modalPage < 0){
+              setModalPage(4);
+            }
         }} accessoryLeft={backIcon} style={{width:"100%"}}></Button>
       </View>
-      <Text category="h3" style={{width:"100%", textAlign:"center"}}>Where is it?</Text>
-      <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].where}</Text>
-      <View style={{position:"absolute", width:"100%", bottom: 40, display:"flex", justifyContent:"center", alignItems:"center"}}>
-        <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
-          <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25}}></View>
-        </View>
-        <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
-      onPress={()=>{
-        setVisible(false);
-        setPayVisible(true);
-      }}>
-        Donate Now!
-      </Button></View>
+      <View style={{width:"60%", justifyContent:"center", alignItems:"center", height:"100%"}}>
+        <Text category="h3" style={{width:"100%", textAlign:"center"}}>Where is it?</Text>
+        <Text category="s1" style={{marginTop: 10, width:"100%", textAlign:"center"}}>{data[selected].where}</Text>
+        <View style={{position:"absolute", width:"100%", bottom: 40, display:"flex", justifyContent:"center", alignItems:"center"}}>
+          <View style={{display:"flex", flexDirection:"row", marginTop: 20}}>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#d6d6d6", borderRadius:25, marginRight: 10}}></View>
+            <View style={{width:8, height:8, backgroundColor:"#141518", borderRadius:25}}></View>
+          </View>
+          <Button style={{width:"60%", marginTop: 20, borderRadius: 10}}
+        onPress={()=>{
+          setVisible(false);
+          setPayVisible(true);
+        }}>
+          Donate Now!
+        </Button></View>
+      </View>
+      <View style={{width:"20%", height:"100%", display: 'flex', justifyContent:"center"}}>
+        <Button appearance="ghost" onPress={()=>{
+          setModalPage(modalPage+1);
+          if(modalPage > 4){
+            setModalPage(0);
+          }
+        }} accessoryLeft={forwardIcon} style={{width:"100%"}}></Button>
+      </View>
     </View>
   )
 }
